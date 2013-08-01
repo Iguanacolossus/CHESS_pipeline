@@ -20,7 +20,7 @@ def main():
         raise Exception("Need to pass file name")
     
     # reads in the file name
-    filename=sys.argv[1]
+    filename = sys.argv[1]
 
     #this opens up the fits  file
     hdulist = fits.open(filename)
@@ -37,32 +37,33 @@ def main():
     plt.subplot(221)
     plt.xlabel('pixels(x)')
     plt.ylabel('pixels(y)')
-    img=plt.imshow(scidata, vmin = 0, vmax = 255)
+    img = plt.imshow(scidata, vmin = 0, vmax = 255)
     
     # making an empty array to put the new values in
     y=[]
     
     # filling in y with the sums of the rows of scidata 
     for i in range(0,len(scidata[0])):
-        t=np.sum(scidata[i,:])
+        t = np.sum(scidata[i,:])
         y.append(t)
         
 
     # making an x axis with same dementions as y
-    x=np.linspace(0,len(scidata[0]),num=len(scidata[0]))
+    x = np.linspace(0,len(scidata[0]), num = len(scidata[0]))
 
     #reversing x for the sake of the visualization
-    xrev=x[::-1]
+    xrev = x[::-1]
 
     # the orders seem to blend around lyman alpha so i have to select
     # the biggest chunk I could use to get a delta y between the
     # orders. i wil have to make this selectable on the GUI some how
-    chunk=[0,500]
+    chunk = [0,500]
+    
     # cuting off back ground here to get zeros and peaks. i will ahve
     # to make this selectable some how on the GUI
-    bgcutoff=475 
-    minv=chunk[0]
-    maxv=chunk[1]
+    bgcutoff = 475 
+    minv = chunk[0]
+    maxv = chunk[1]
     plt.subplot(212)
     plt.plot(y,xrev)
     plt.ylabel('pixels(y)')
@@ -73,12 +74,12 @@ def main():
     plt.show()
     
     #cutting out chunk of data
-    xchunk= x[max(x)-chunk[1]:max(x)]
-    index1=int(max(x)-chunk[1])
-    index2=int(max(x))
-    ychunk=y[index1:index2]
+    xchunk = x[max(x)-chunk[1]:max(x)]
+    index1 = int(max(x)-chunk[1])
+    index2 = int(max(x))
+    ychunk = y[index1:index2]
     #reversing x for the sake of the plot
-    xrevchunk=xchunk[::-1]
+    xrevchunk = xchunk[::-1]
 
     #creating a new baseline
     for i in range(0,xchunk.size):
@@ -89,23 +90,23 @@ def main():
     #plt.plot(ychunk,xrevchunk)
     #plt.show()
 
-    bounds=[]
-    a=ychunk
+    bounds = []
+    a = ychunk
     # find the bounds of a order by indice in the array
-    for i in range(1,len(a)):
+    for i in range(1, len(a)):
         if a[i-1] == 0 and a[i] > 0:
             print(i , "begin hump index")
             bounds.append(i)
         if a[i-1] > 0 and a[i] == 0:
             print(i-1, "end hump index")
-            bounds.append(i-1)
+            bounds.append(i - 1)
 
     # now 'bounds' is a list of the indices of the array were a #order begins and ends
   
     # 'bounds' but now grouped
-    grpbounds= list(group(bounds,2))
+    grpbounds = list(group(bounds, 2))
 
-    centers=[]
+    centers = []
     # finding max with in the bouds of the orders and reading them #in
     # to 'centers' list
     for i in range(len(grpbounds)):
@@ -119,8 +120,9 @@ def main():
 def group(lst,n):
     for i in range(0, len(lst), n):
        val=lst[i:i+n]
-       if len(val) ==n:
+       if len(val) == n:
           yield tuple(val)
+
 
 
 if __name__ == '__main__':
