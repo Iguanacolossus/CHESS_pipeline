@@ -16,12 +16,15 @@ import numpy as np
 
 def main():
 
+    if (len(sys.argv) < 2):
+        raise Exception("Need to pass file name")
+        
     filename=sys.argv[1] # reads in the file name
     
     hdulist = fits.open(filename) #this opens up the fits  file
     
     targname = hdulist[0].header['targname']
-    print 'Target Name', targname
+    print('Target Name', targname)
     
     
     scidata = hdulist['sci',2].data #this picks out the actual data from fits file, and turns it into numpy array
@@ -83,10 +86,10 @@ def main():
     # find the bounds of a order by indice in the array
     for i in range(1,len(a)):
         if a[i-1] == 0 and a[i] > 0:
-            print i , "begin hump index"
+            print(i , "begin hump index")
             bounds.append(i)
         if a[i-1] > 0 and a[i] == 0:
-            print i-1, "end hump index"
+            print(i-1, "end hump index")
             bounds.append(i-1)
 
     # now 'bounds' is a list of the indices of the array were a #order begins and ends
@@ -112,10 +115,6 @@ def group(lst,n):
        val=lst[i:i+n]
        if len(val) ==n:
           yield tuple(val)
-
-
-  
-  
 
 
 if __name__ == '__main__':
