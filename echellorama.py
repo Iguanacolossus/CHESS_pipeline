@@ -18,10 +18,12 @@ def main():
 
     if (len(sys.argv) < 2):
         raise Exception("Need to pass file name")
-        
-    filename=sys.argv[1] # reads in the file name
     
-    hdulist = fits.open(filename) #this opens up the fits  file
+    # reads in the file name
+    filename=sys.argv[1]
+
+    #this opens up the fits  file
+    hdulist = fits.open(filename)
     
     targname = hdulist[0].header['targname']
     print('Target Name', targname)
@@ -37,22 +39,28 @@ def main():
     plt.ylabel('pixels(y)')
     img=plt.imshow(scidata, vmin = 0, vmax = 255)
     
+    # making an empty array to put the new values in
+    y=[]
     
-    y=[]          # making an empty array to put the new values in
-    
-    
-    
-    for i in range(0,len(scidata[0])):  # filling in y with the sums of the rows of scidata 
+    # filling in y with the sums of the rows of scidata 
+    for i in range(0,len(scidata[0])):
         t=np.sum(scidata[i,:])
         y.append(t)
         
 
-    x=np.linspace(0,len(scidata[0]),num=len(scidata[0]))# making an x axis with same dementions as y
-        
-    xrev=x[::-1] #reversing x for the sake of the visualization
-    
-    chunk=[0,500]# the orders seem to blend around lyman alpha so i have to select the biggest chunk I could  use to get a delta y between the orders. i wil have to make this selectable on the GUI some how
-    bgcutoff=475 # cuting off back ground here to get zeros and peaks. i will ahve to make this selectable some how on  the GUI 
+    # making an x axis with same dementions as y
+    x=np.linspace(0,len(scidata[0]),num=len(scidata[0]))
+
+    #reversing x for the sake of the visualization
+    xrev=x[::-1]
+
+    # the orders seem to blend around lyman alpha so i have to select
+    # the biggest chunk I could use to get a delta y between the
+    # orders. i wil have to make this selectable on the GUI some how
+    chunk=[0,500]
+    # cuting off back ground here to get zeros and peaks. i will ahve
+    # to make this selectable some how on the GUI
+    bgcutoff=475 
     minv=chunk[0]
     maxv=chunk[1]
     plt.subplot(212)
@@ -94,22 +102,20 @@ def main():
 
     # now 'bounds' is a list of the indices of the array were a #order begins and ends
   
-
-
-    grpbounds= list(group(bounds,2)) # 'bounds' but now grouped
+    # 'bounds' but now grouped
+    grpbounds= list(group(bounds,2))
 
     centers=[]
-    # finding max with in the bouds of the orders and reading them #in to 'centers' list
+    # finding max with in the bouds of the orders and reading them #in
+    # to 'centers' list
     for i in range(len(grpbounds)):
         centers.append(max(a[grpbounds[i][0]:grpbounds[i][1]+1]))
    
  
     #print a.index(centers)
-
-
-
     
-# defining a function to group the indecies of 'bounds' to # sets of (begin order, end order)
+# defining a function to group the indecies of 'bounds' to # sets of
+# (begin order, end order)
 def group(lst,n):
     for i in range(0, len(lst), n):
        val=lst[i:i+n]
