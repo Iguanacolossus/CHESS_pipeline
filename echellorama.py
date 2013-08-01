@@ -97,10 +97,10 @@ def main():
     # find the bounds of a order by indice in the array
     for i in range(1, len(a)):
         if a[i-1] == 0 and a[i] > 0:
-            print(i , "begin hump index")
+           # print(i , "begin hump index")
             bounds.append(i)
         if a[i-1] > 0 and a[i] == 0:
-            print(i-1, "end hump index")
+           # print(i-1, "end hump index")
             bounds.append(i - 1)
 
     # now 'bounds' is a list of the indices of the array were a #order begins and ends
