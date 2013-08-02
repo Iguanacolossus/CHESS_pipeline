@@ -131,10 +131,28 @@ def main():
     #using scipy.signal.find_peaks_cwt() to find centers of orders.  this required scipy version .11.0 or greater
     peakind=signal.find_peaks_cwt(ychunk,np.arange(3,15))
    
+    plt.subplot(211)   
     plt.plot(xchunk,ychunk)
-    plt.vlines(xchunk[peakind],-1000,5000,color='purple')
+    plt.vlines(xchunk[peakind],0,3000,color='purple')
     plt.title('chunk of data with centers found by find_peaks_cwt()')
     
+    plt.subplot(212)
+    plt.plot(np.arange(len(peakind)),peakind,marker='o',linestyle='none',color='purple',label="order centers")
+    plt.xlabel('order')
+    plt.ylabel('order possition')
+    plt.title('center possitions with repect to verticle postion on detector')
+    
+    # fitting orders to line
+    fit=np.polyfit(np.arange(len(peakind)),peakind,2)
+    xfit=np.arange(len(peakind))
+    linefit=fit[2] + fit[1]*xfit + fit[0]*(xfit**2)
+    deg0 = str.format('{0:.2f}', fit[0])
+    deg1 = str.format('{0:.2f}', fit[1])
+    deg2 = str.format('{0:.2f}', fit[2])
+    plt.plot(xfit,linefit,color='r',linestyle='--',label='$x^2$'+deg0+'$+x$'+deg1+'$+$'+deg2+'')
+    plt.legend(loc=2)
+    
+    #plt.text(2,300,'$x^2$'+deg0+'$+x$'+deg1+'$+$'+deg2+'')
     plt.show()
 
 
