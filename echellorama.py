@@ -4,6 +4,7 @@
 
 import matplotlib.pyplot as plt
 #import matplotlib.image as mpimg
+import matplotlib.figure as fig
 
 # syntax: $ python squashmatrix2.py 'filename.fits'
 import sys
@@ -37,7 +38,7 @@ def main():
     hdulist.close()
     
     
-    plt.subplot(221)
+    plt.subplot(211)
     plt.xlabel('pixels(x)')
     plt.ylabel('pixels(y)')
     img = plt.imshow(scidata, vmin = 0, vmax = 255)
@@ -127,33 +128,117 @@ def main():
 #       if len(val) == n:
 #          yield tuple(val)
 ############################################################################################################################3
-    
+    plt.figure(figsize=(7.5,8.4))
     #using scipy.signal.find_peaks_cwt() to find centers of orders.  this required scipy version .11.0 or greater
     peakind=signal.find_peaks_cwt(ychunk,np.arange(3,15))
-   
-    plt.subplot(211)   
+    
+    #plt.subplot(321)   
     plt.plot(xchunk,ychunk)
     plt.vlines(xchunk[peakind],0,3000,color='purple')
     plt.title('chunk of data with centers found by find_peaks_cwt()')
     
-    plt.subplot(212)
-    plt.plot(np.arange(len(peakind)),peakind,marker='o',linestyle='none',color='purple',label="order centers")
-    plt.xlabel('order')
-    plt.ylabel('order possition')
-    plt.title('center possitions with repect to verticle postion on detector')
+    #find w
+    w=[]
+    for i in range(1,len(peakind)):
+    	t=peakind[i]-peakind[i-1]
+    	w.append(t)
     
-    # fitting orders to line
-    fit=np.polyfit(np.arange(len(peakind)),peakind,2)
-    xfit=np.arange(len(peakind))
-    linefit=fit[2] + fit[1]*xfit + fit[0]*(xfit**2)
-    deg0 = str.format('{0:.2f}', fit[0])
-    deg1 = str.format('{0:.2f}', fit[1])
-    deg2 = str.format('{0:.2f}', fit[2])
-    plt.plot(xfit,linefit,color='r',linestyle='--',label='$x^2$'+deg0+'$+x$'+deg1+'$+$'+deg2+'')
-    plt.legend(loc=2)
+    avew=sum(w)/len(w)
+    w.append(avew)
     
-    #plt.text(2,300,'$x^2$'+deg0+'$+x$'+deg1+'$+$'+deg2+'')
+    wvlines=[]
+    b=xchunk[peakind[0]]-avew/2
+    wvlines.append(b)
+    for i in np.arange(len(peakind)):
+    	f=xchunk[peakind[i]]+w[i]/2
+    	wvlines.append(f)
+    plt.vlines(wvlines,0,2800,color='r',linestyle='--')
+    
+    #extraction
+    plt.figure()
+    zeros=np.zeros((len(x),1))
+    zeros[1024-max(w):1024]=1
+    
+    order1=scidata*zeros
+    #img = plt.imshow(order1, vmin = 0, vmax = 255)
+    
+    o1=[]
+    for i in range(0,len(scidata[0])):
+        t = np.sum(scidata[:,i])
+        o1.append(t)
+    x1 = np.linspace(0,len(order1[0]), num = len(order1[0]))
+    plt.plot(x1,o1)
+    	
+    
+####### fitting centers to line#####
+#    plt.subplot(324)
+#    plt.plot(xchunk[peakind],peakind,marker='o',linestyle='none',color='purple',label="order centers")
+#    plt.xlabel('yaxis on detector')
+#    plt.ylabel('order center index')
+#    #plt.title('center possitions with repect to verticle postion on detector')
+    
+#    print len(range(int(min(xchunk)),int(max(xchunk)),len(peakind)))
+#    print len(xchunk[peakind])
+    
+#    fit=np.polyfit(range(int(min(xchunk)),int(max(xchunk)),len(peakind)),xchunk[peakind],2)
+    
+#    xfit=xchunk[peakind]
+#    linefit=fit[2] + fit[1]*xfit + fit[0]*(xfit**2)
+#    deg0 = str.format('{0:.2f}', fit[0])
+#    deg1 = str.format('{0:.2f}', fit[1])
+#    deg2 = str.format('{0:.2f}', fit[2])
+#    plt.plot(xfit,linefit,color='r',linestyle='--',label='$x^2$'+deg0+'$+x$'+deg1+'$+$'+deg2+'')
+#    #plt.legend(loc=2)
+    #
+#   #arange= int(min(xchunk[peakind]))
+#   # brange= int(max(xchunk[peakind]))
+#   # crange= int(len(xchunk))+1
+#   # print len(range(arange,brange,crange))
+    
+#    #print len(xchunk[peakind])
+#    #plt.plot(range(arange,brange,crange),xchunk[peakind],marker='o',linestyle='none',color='purple',label="centers of orders")
+    
+#    # filling in for the missing centers with the new centers funtion(linefit)
+#    plt.subplot(323)
+#    allcen=fit[2] + fit[1]*x + fit[0]*(x**2)
+    
+#    allcen=[i for i in allcen if i < max(x)]
+#    plt.vlines(x[allcen],0,3000,color='purple')
+#    plt.plot(x,y)
+    
+#   # print allcen
+#  #  print peakind
+    
+#    plt.subplot(322)
+
+###### finding and fitting spacing between orders####    
+#    orderspace=[]
+#    for i in range(1,len(peakind)):
+#    	t=peakind[i]-peakind[i-1]
+#    	orderspace.append(t)
+    	
+#    peakind.remove(peakind[0])
+#    #print len(peakind)
+    
+#    plt.plot(xchunk[peakind],orderspace,marker='o',linestyle='none',color='purple',label="space between orders")
+#    plt.ylabel('order spaceing by pixel')
+#    plt.title('center possitions with repect to verticle postion on detector')
+    
+    # fitting orderspaceing to line
+#    fit=np.polyfit(xchunk[peakind],orderspace,2)
+#    linefit=fit[2] + fit[1]*xchunk + fit[0]*(xchunk**2)
+#    deg0 = str.format('{0:.2f}', fit[0])
+#    deg1 = str.format('{0:.2f}', fit[1])
+#    deg2 = str.format('{0:.2f}', fit[2])
+#    plt.plot(xchunk, linefit, color='r', linestyle='--', label='$x^2$'+deg0+'$+x$'+deg1+'$+$'+deg2+'')
+#    plt.legend(loc=4)
+   
+
+    
+    
+    
     plt.show()
+    
 
 
 if __name__ == '__main__':
