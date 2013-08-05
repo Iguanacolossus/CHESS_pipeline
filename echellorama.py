@@ -1,6 +1,6 @@
 
 
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import matplotlib.pyplot as plt
 #import matplotlib.image as mpimg
@@ -132,7 +132,7 @@ def main():
     #using scipy.signal.find_peaks_cwt() to find centers of orders.  this required scipy version .11.0 or greater
     peakind=signal.find_peaks_cwt(ychunk,np.arange(3,15))
     
-    #plt.subplot(321)   
+    plt.subplot(211)   
     plt.plot(xchunk,ychunk)
     plt.vlines(xchunk[peakind],0,3000,color='purple')
     plt.title('chunk of data with centers found by find_peaks_cwt()')
@@ -144,7 +144,9 @@ def main():
     	w.append(t)
     
     avew=sum(w)/len(w)
-    w.append(avew)
+    #w.append(avew)
+    maxw=max(w)
+    w.append(maxw)
     
     wvlines=[]
     b=xchunk[peakind[0]]-avew/2
@@ -154,25 +156,26 @@ def main():
     	wvlines.append(f)
     plt.vlines(wvlines,0,2800,color='r',linestyle='--')
     
-    #extraction
+    ####extraction
     plt.figure()
     zeros=np.zeros((len(x),1))
     zeros[1024-max(w):1024]=1
-    
     order1=scidata*zeros
-    #img = plt.imshow(order1, vmin = 0, vmax = 255)
+    
     
     o1=[]
     for i in range(0,len(scidata[0])):
         t = np.sum(scidata[:,i])
         o1.append(t)
     x1 = np.linspace(0,len(order1[0]), num = len(order1[0]))
+    plt.subplot(212)
+    plt.title('one order')
     plt.plot(x1,o1)
     	
     
 ####### fitting centers to line#####
-#    plt.subplot(324)
-#    plt.plot(xchunk[peakind],peakind,marker='o',linestyle='none',color='purple',label="order centers")
+    #plt.subplot(324)
+    #plt.plot(np.zeros(len(peakind)),xchunk[peakind],marker='o',linestyle='none',color='purple',label="order centers")
 #    plt.xlabel('yaxis on detector')
 #    plt.ylabel('order center index')
 #    #plt.title('center possitions with repect to verticle postion on detector')
@@ -180,14 +183,16 @@ def main():
 #    print len(range(int(min(xchunk)),int(max(xchunk)),len(peakind)))
 #    print len(xchunk[peakind])
     
-#    fit=np.polyfit(range(int(min(xchunk)),int(max(xchunk)),len(peakind)),xchunk[peakind],2)
+    #fit=np.polyfit(np.zeros(len(peakind)),xchunk[peakind],2)
+     
     
-#    xfit=xchunk[peakind]
-#    linefit=fit[2] + fit[1]*xfit + fit[0]*(xfit**2)
+    #xfit=np.zeros(len(peakind))
+    #print xchunk[peakind]
+    #linefit=fit[2] + fit[1]*xfit + fit[0]*(xfit**2)
 #    deg0 = str.format('{0:.2f}', fit[0])
 #    deg1 = str.format('{0:.2f}', fit[1])
 #    deg2 = str.format('{0:.2f}', fit[2])
-#    plt.plot(xfit,linefit,color='r',linestyle='--',label='$x^2$'+deg0+'$+x$'+deg1+'$+$'+deg2+'')
+    #plt.plot(np.zeros(len(peakind)),linefit,color='r',linestyle='--')#,label='$x^2$'+deg0+'$+x$'+deg1+'$+$'+deg2+'')
 #    #plt.legend(loc=2)
     #
 #   #arange= int(min(xchunk[peakind]))
@@ -219,18 +224,23 @@ def main():
     	
 #    peakind.remove(peakind[0])
 #    #print len(peakind)
-    
-#    plt.plot(xchunk[peakind],orderspace,marker='o',linestyle='none',color='purple',label="space between orders")
+    plt.figure()
+    #for i in range(1,len(w)):
+    #	w[i]=w[0]+w[i]
+    #w[0]=w[0]*2
+    plt.plot(xchunk[peakind],w,marker='o',linestyle='none',color='purple',label="space between orders")
+    plt.ylabel('w')
+    plt.xlabel('pixels along yaxis of detector')
 #    plt.ylabel('order spaceing by pixel')
 #    plt.title('center possitions with repect to verticle postion on detector')
     
-    # fitting orderspaceing to line
-#    fit=np.polyfit(xchunk[peakind],orderspace,2)
-#    linefit=fit[2] + fit[1]*xchunk + fit[0]*(xchunk**2)
-#    deg0 = str.format('{0:.2f}', fit[0])
-#    deg1 = str.format('{0:.2f}', fit[1])
-#    deg2 = str.format('{0:.2f}', fit[2])
-#    plt.plot(xchunk, linefit, color='r', linestyle='--', label='$x^2$'+deg0+'$+x$'+deg1+'$+$'+deg2+'')
+    ##fitting orderspaceing to line
+    fit=np.polyfit(xchunk[peakind],w,2)
+    linefit=fit[2] + fit[1]*xchunk + fit[0]*(xchunk**2)
+    deg0 = str.format('{0:.2f}', fit[0])
+    deg1 = str.format('{0:.2f}', fit[1])
+    deg2 = str.format('{0:.2f}', fit[2])
+    plt.plot(xchunk, linefit, color='r', linestyle='--', label='$x^2$'+deg0+'$+x$'+deg1+'$+$'+deg2+'')
 #    plt.legend(loc=4)
    
 
