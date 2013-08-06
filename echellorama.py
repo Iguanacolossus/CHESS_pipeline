@@ -2,20 +2,18 @@
 
 #!/usr/bin/env python
 
+## example:
+##           $ python squashmatrix2.py 'filename.fits'
+
 import matplotlib.pyplot as plt
-#import matplotlib.image as mpimg
 import matplotlib.figure as fig
-
-# syntax: $ python squashmatrix2.py 'filename.fits'
 import sys
-
 import astropy.io.fits as fits
+import numpy as np
+from scipy import signal
 
 #import pylab
 #import aplpy
-
-import numpy as np
-from scipy import signal
 
 
 def main():
@@ -30,17 +28,17 @@ def main():
     hdulist = fits.open(filename)
     
     targname = hdulist[0].header['targname']
-    print('Target Name', targname)
+    #print('Target Name', targname)
     
-    
-    scidata = hdulist['sci',2].data #this picks out the actual data from fits file, and turns it into numpy array
-    
+    #this picks out the actual data from fits file, and turns it into numpy array
+    scidata = hdulist['sci',2].data 
     hdulist.close()
     
     
     plt.subplot(211)
     plt.xlabel('pixels(x)')
     plt.ylabel('pixels(y)')
+    plt.title(targname)
     img = plt.imshow(scidata, vmin = 0, vmax = 255)
     
     # making an empty array to put the new values in
@@ -63,28 +61,26 @@ def main():
     # orders. i wil have to make this selectable on the GUI some how
     chunk = [0,500]
     
-    # cuting off back ground here to get zeros and peaks. i will ahve
-    # to make this selectable some how on the GUI
-    bgcutoff = 475
+    # with the alpha cen data i have to only use the part of the spectrum with out airglow making the orders blend
     minv = chunk[0]
     maxv = chunk[1]
     plt.subplot(212)
     plt.plot(y,xrev)
     plt.ylabel('pixels(y)')
     plt.xlabel('Intensity')
-    #plt.vlines(bgcutoff,[0],1000,label='background cutoff')
+    #drawing box around my chunk to check makesure I have a good portion
     plt.hlines(chunk,[-1000],[5000],color='r')
     plt.vlines([-1000,5000],minv,maxv,color='r')
     plt.show()
     
-    #cutting out chunk of data
+    #cutting out the chunk of data tat i selected
     xchunk = x[max(x)-chunk[1]:max(x)]
     index1 = int(max(x)-chunk[1])
     index2 = int(max(x))
     ychunk = y[index1:index2]
     #reversing x for the sake of the plot
     xrevchunk = xchunk[::-1]
-    #plt.subplot(123)
+    
 ####  this is my manual code for making a zero backgrouns then finding the value at each peak############################
 #    #creating a new baseline
 #   for i in range(0,xchunk.size):
@@ -132,37 +128,44 @@ def main():
     #using scipy.signal.find_peaks_cwt() to find centers of orders.  this required scipy version .11.0 or greater
     peakind=signal.find_peaks_cwt(ychunk,np.arange(3,15))
     
+    #plotting chunk of data with lines through the centers of the orders to double check how the peak finder did
     plt.subplot(211)   
     plt.plot(xchunk,ychunk)
-    plt.vlines(xchunk[peakind],0,3000,color='purple')
+    plt.vlines(xchunk[peakind],0,2000,color='purple',label='centers')
     plt.title('chunk of data with centers found by find_peaks_cwt()')
     
-    #find w
+    #find w, the widths of the orders
+    # first i make an array of the peference between peaks
     w=[]
     for i in range(1,len(peakind)):
     	t=peakind[i]-peakind[i-1]
     	w.append(t)
     
+    
     avew=sum(w)/len(w)
-    #w.append(avew)
+    # i have to add an extra w at the end of the array to make it the right size i (hopefully this is kosher)
     maxw=max(w)
     w.append(maxw)
     
+    # placeing verticle lines in the visualization where the widths would stand
     wvlines=[]
     b=xchunk[peakind[0]]-avew/2
     wvlines.append(b)
     for i in np.arange(len(peakind)):
     	f=xchunk[peakind[i]]+w[i]/2
     	wvlines.append(f)
-    plt.vlines(wvlines,0,2800,color='r',linestyle='--')
+    plt.vlines(wvlines,0,2500,color='r',linestyle='--',label='w boundries')
+    plt.legend(loc=1)
     
-    ####extraction
+    ####extraction of orders
+    
     plt.figure()
+    #making array of 1s ans 0s and extracting the last order
     zeros=np.zeros((len(x),1))
     zeros[1024-max(w):1024]=1
     order1=scidata*zeros
     
-    
+    # making that order 1d and plotting it
     o1=[]
     for i in range(0,len(scidata[0])):
         t = np.sum(scidata[:,i])
@@ -172,7 +175,7 @@ def main():
     plt.title('one order')
     plt.plot(x1,o1)
     	
-    
+###this next part was me fitting with air glow#######
 ####### fitting centers to line#####
     #plt.subplot(324)
     #plt.plot(np.zeros(len(peakind)),xchunk[peakind],marker='o',linestyle='none',color='purple',label="order centers")
@@ -224,23 +227,23 @@ def main():
     	
 #    peakind.remove(peakind[0])
 #    #print len(peakind)
-    plt.figure()
+    #plt.figure()
     #for i in range(1,len(w)):
     #	w[i]=w[0]+w[i]
     #w[0]=w[0]*2
-    plt.plot(xchunk[peakind],w,marker='o',linestyle='none',color='purple',label="space between orders")
-    plt.ylabel('w')
-    plt.xlabel('pixels along yaxis of detector')
+    #plt.plot(xchunk[peakind],w,marker='o',linestyle='none',color='purple',label="space between orders")
+    #plt.ylabel('w')
+    #plt.xlabel('pixels along yaxis of detector')
 #    plt.ylabel('order spaceing by pixel')
 #    plt.title('center possitions with repect to verticle postion on detector')
     
     ##fitting orderspaceing to line
-    fit=np.polyfit(xchunk[peakind],w,2)
-    linefit=fit[2] + fit[1]*xchunk + fit[0]*(xchunk**2)
-    deg0 = str.format('{0:.2f}', fit[0])
-    deg1 = str.format('{0:.2f}', fit[1])
-    deg2 = str.format('{0:.2f}', fit[2])
-    plt.plot(xchunk, linefit, color='r', linestyle='--', label='$x^2$'+deg0+'$+x$'+deg1+'$+$'+deg2+'')
+    #fit=np.polyfit(xchunk[peakind],w,2)
+    #linefit=fit[2] + fit[1]*xchunk + fit[0]*(xchunk**2)
+    #deg0 = str.format('{0:.2f}', fit[0])
+    #deg1 = str.format('{0:.2f}', fit[1])
+    #deg2 = str.format('{0:.2f}', fit[2])
+    #plt.plot(xchunk, linefit, color='r', linestyle='--', label='$x^2$'+deg0+'$+x$'+deg1+'$+$'+deg2+'')
 #    plt.legend(loc=4)
    
 
