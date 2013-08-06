@@ -161,23 +161,41 @@ def main():
     
     plt.figure()
     
-    ### making arrays of 1s ans 0s and extracting the 2d orders into a dictionary called  2Dorders
+    ### making arrays of 1s ans 0s and extracting the 1d orders into a dictionary called  oneDorders
     zeros=np.zeros((len(x),1))
     index = range(0,len(w))
     reindex = index[::-1]
-    2Dorders={}
+    
+    oneDorders = {}
     for i in reindex:
     	zeros1=np.copy(zeros)
     	zeros1[ 1024 - (np.sum(w[(i):18])) : 1024 - np.sum(w[(i+1):18]) ] = 1
-    	2Dorders['order'+str(i)] = scidata*zeros1
+    	#2Dorders['order'+str(i)] = scidata*zeros1
     	#globals()['order'+str(i)]=scidata*zeros1
+    	twoD = scidata*zeros1
+    	if i == 16:
+    		plt.subplot(211)
+    		plt.imshow(twoD)
+    		plt.title('sample of one of the orders in 1d and 2d') 	
+    	Y=[]
+    	for j in range(0,len(scidata[0])):
+        	t = np.sum(twoD[:,j])
+        	Y.append(t)
+        oneDorders['order'+str(i)]=Y
+    
+    x = np.linspace(0,len(scidata[0]), num = len(scidata[0]))
+    plt.subplot(212)
+    plt.plot(x,oneDorders['order16'])
+        
+    	
     	
     
     ### turning 2D orders into 1D orders
-   # o1=[]
+    #o1=[]
+    #1Dorders={}
    # for i in range(0,len(scidata[0])):
-    #    t = np.sum(scidata[:,i])
-    #    o1.append(t)
+    #    t = np.sum([:,i])
+     #   o1.append(t)
 #    x1 = np.linspace(0,len(order1[0]), num = len(order1[0]))
 #    plt.subplot(212)
 #    plt.title('one order')
