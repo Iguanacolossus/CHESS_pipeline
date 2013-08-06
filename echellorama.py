@@ -144,7 +144,7 @@ def main():
     
     avew=sum(w)/len(w)
     # i have to add an extra w at the end of the array to make it the right size i (hopefully this is kosher)
-    maxw=max(w)
+    maxw=max(w)-4
     w.append(maxw)
     
     # placeing verticle lines in the visualization where the widths would stand
@@ -160,20 +160,28 @@ def main():
     ####extraction of orders
     
     plt.figure()
-    #making array of 1s ans 0s and extracting the last order
-    zeros=np.zeros((len(x),1))
-    zeros[1024-max(w):1024]=1
-    order1=scidata*zeros
     
-    # making that order 1d and plotting it
-    o1=[]
-    for i in range(0,len(scidata[0])):
-        t = np.sum(scidata[:,i])
-        o1.append(t)
-    x1 = np.linspace(0,len(order1[0]), num = len(order1[0]))
-    plt.subplot(212)
-    plt.title('one order')
-    plt.plot(x1,o1)
+    ### making arrays of 1s ans 0s and extracting the 2d orders into a dictionary called  2Dorders
+    zeros=np.zeros((len(x),1))
+    index = range(0,len(w))
+    reindex = index[::-1]
+    2Dorders={}
+    for i in reindex:
+    	zeros1=np.copy(zeros)
+    	zeros1[ 1024 - (np.sum(w[(i):18])) : 1024 - np.sum(w[(i+1):18]) ] = 1
+    	2Dorders['order'+str(i)] = scidata*zeros1
+    	#globals()['order'+str(i)]=scidata*zeros1
+    	
+    
+    ### turning 2D orders into 1D orders
+   # o1=[]
+   # for i in range(0,len(scidata[0])):
+    #    t = np.sum(scidata[:,i])
+    #    o1.append(t)
+#    x1 = np.linspace(0,len(order1[0]), num = len(order1[0]))
+#    plt.subplot(212)
+#    plt.title('one order')
+#    plt.plot(x1,o1)
     	
 ###this next part was me fitting with air glow#######
 ####### fitting centers to line#####
