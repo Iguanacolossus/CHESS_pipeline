@@ -57,9 +57,9 @@ class MyWindow(Gtk.Window):
         
     # button box
         vbutton_box = Gtk.HButtonBox()
-        button1 = Gtk.Button('button1')
-        button2 = Gtk.Button('button2')
-        button3 = Gtk.Button('button3')
+        button1 = Gtk.Button('Raw count rate')
+        button2 = Gtk.Button('Filter PHD')
+        button3 = Gtk.Button('Fit 1D Gauss')
         
         vbutton_box.pack_start(button1,True,True, 0)
         vbutton_box.pack_start(button2,True, True, 0)
