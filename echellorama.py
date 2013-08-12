@@ -13,13 +13,13 @@ import astropy.io.fits as fits
 import numpy as np
 from scipy import signal
 from gi.repository import Gtk, GObject
-import pygtk
+
 from matplotlib.figure import Figure
-#from matplotlib.backends.backend_gtk import FigureCanvasGTK as FigureCanvas
 from matplotlib.backends.backend_gtk3cairo import FigureCanvasGTK3Cairo as FigureCanvas
-#from matplotlib.backends.backend_GTKAgg import FigureCanvasGTK as FigureCanvas
-#import pylab
-#import aplpy
+from matplotlib.backends.backend_gtk3 import NavigationToolbar2GTK3 as NavigationToolbar
+
+
+
 
 
 class MyWindow(Gtk.Window):
@@ -37,6 +37,7 @@ class MyWindow(Gtk.Window):
         self.a.tick_params(axis='both', labelsize=7)
         self.a.set_ylabel("y pixels")
         self.a.set_title("2D raw data")
+        
         self.b.set_title("1D extracted data")
         self.b.set_xlabel('pixels')
         self.b.set_ylabel('intensity')
@@ -45,8 +46,35 @@ class MyWindow(Gtk.Window):
         self.c.tick_params(axis='both', labelsize=7)
         
         
-        self.canvas = FigureCanvas(self.f)
-        self.add(self.canvas)
+        self.canvas = FigureCanvas(self.f) 
+             
+        
+    # tool bar stuff     
+        
+        toolbar = NavigationToolbar(self.canvas, self)
+        main_box = Gtk.Box(spacing = 2, orientation = Gtk.Orientation.VERTICAL)
+        self.add(main_box)
+        
+    # button box
+        vbutton_box = Gtk.HButtonBox()
+        button1 = Gtk.Button('button1')
+        button2 = Gtk.Button('button2')
+        button3 = Gtk.Button('button3')
+        
+        vbutton_box.pack_start(button1,True,True, 0)
+        vbutton_box.pack_start(button2,True, True, 0)
+        vbutton_box.pack_start(button3,True, True, 0)
+        
+        
+        
+        
+    # packing in main_box
+        main_box.pack_start(self.canvas, True, True, 0)
+       
+        main_box.pack_start(vbutton_box,False,False,0)
+        main_box.pack_start(toolbar, False, False, 0)
+            
+        
     # passing in filename or sends error
     	if (len(sys.argv) < 2):
         	raise Exception("Need to pass file name")
@@ -323,9 +351,14 @@ class MyWindow(Gtk.Window):
     	self.plt=self.b.plot(x,odo)
         
         self.canvas.draw()
+        
     def update_PHDplot(self,x,y):
         self.plt=self.c.plot(x,y)
-        self.canvas.draw
+        self.canvas.draw()
+
+
+        
+
     
 
 
