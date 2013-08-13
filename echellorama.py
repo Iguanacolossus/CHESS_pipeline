@@ -4,7 +4,7 @@
 
 ## example:
 ##           $ python squashmatrix2.py 'filename.fits'
-
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.figure as fig
 import matplotlib.text as text
@@ -27,17 +27,20 @@ class MyWindow(Gtk.Window):
         Gtk.Window.__init__(self,title="Echelle Reduction GUI")
   
    ## setting up GUI canvase ###     
-        self.set_default_size(700,600)
+        self.set_default_size(1000,700)
     	self.f = Figure(figsize=(5,7), dpi=100)
-        self.a = self.f.add_subplot(221)
+          #nrows, nccolums, index
         self.b = self.f.add_subplot(212)
-        self.c = self.f.add_subplot(222)
+        self.c = self.f.add_subplot(231)
+        self.e = self.f.add_subplot(233) # check orders 
+        self.a = self.f.add_subplot(232)
+        self.e.tick_params(axis='both',labelsize=6)
+        self.e.set_title("orders")
         self.a.grid(False)
         self.a.set_xlabel("x pixels", fontsize=10)
         self.a.tick_params(axis='both', labelsize=7)
         self.a.set_ylabel("y pixels")
         self.a.set_title("2D raw data")
-        
         self.b.set_title("1D extracted data")
         self.b.set_xlabel('pixels')
         self.b.set_ylabel('intensity')
@@ -128,6 +131,7 @@ class MyWindow(Gtk.Window):
         #plt.plot(y,xrev)
 	#plt.ylabel('pixels(y)')
 	#plt.xlabel('Intensity')
+	
     #drawing box around my chunk to check makesure I have a good portion
 	#plt.hlines(chunk,[-1000],[5000],color='r')
         #plt.vlines([-1000,5000],minv,maxv,color='r')
@@ -140,6 +144,8 @@ class MyWindow(Gtk.Window):
 	ychunk = y[index1:index2]
     #reversing x for the sake of the plot
     	xrevchunk = xchunk[::-1]
+    	
+    	
     
 ####  this is my manual code for making a zero backgrounds then finding the value at each peak############################
 #    #creating a new baseline
@@ -194,6 +200,9 @@ class MyWindow(Gtk.Window):
     	#plt.plot(xchunk,ychunk)
     	#plt.vlines(xchunk[peakind],0,2000,color='purple',label='centers')
     	#plt.title('chunk of data with centers found by find_peaks_cwt()')
+    	ovlines=xchunk[peakind]
+    	revlines=ovlines[::-1]
+    	self.update_ordersplot(ychunk,xrevchunk,revlines)
     
     #find w, the widths of the orders
     # first i make an array of the difference between peaks
@@ -344,6 +353,10 @@ class MyWindow(Gtk.Window):
   ## plotting in gui
     def update_plot(self, scidata):
         self.plt= self.a.imshow(scidata, vmin = 0, vmax = 255)
+        
+        cbar=self.f.colorbar(self.plt,shrink=.90,pad=0.004)
+        #cbar.self.a.tick_params(labelsize=5) 
+
     	
         self.canvas.draw()
     def update_1dplot(self,odo,x):
@@ -354,6 +367,11 @@ class MyWindow(Gtk.Window):
         
     def update_PHDplot(self,x,y):
         self.plt=self.c.plot(x,y)
+        self.canvas.draw()
+        
+    def update_ordersplot(self,y,xrev,revlines):
+        self.plt=self.e.plot(y,xrev)
+        self.e.hlines(revlines,0,2000,color='purple',label='centers')
         self.canvas.draw()
 
 
