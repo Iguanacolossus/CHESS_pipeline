@@ -2,8 +2,9 @@
 # coding: utf-8
 #!/usr/bin/env python
 
-## example:
-##           $ python squashmatrix2.py 'filename.fits'
+
+# syntax:           >>> python squashmatrix2.py 'filename.fits' 'Background_filename.fits'
+# 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.figure as fig
@@ -26,20 +27,16 @@ class MyWindow(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self,title="Echelle Reduction GUI")
   
-   ## setting up GUI canvase ###     
+   ## setting up canvase for plotting ###     
         self.set_default_size(1000,700)
     	self.f = Figure(figsize=(5,7), dpi=100)
-          #nrows, nccolums, index
-        self.b = self.f.add_subplot(212)
-        self.c = self.f.add_subplot(231)
-        self.e = self.f.add_subplot(233) # check orders 
-        self.a = self.f.add_subplot(232)
+        self.b = self.f.add_subplot(212) # 1D
+        self.c = self.f.add_subplot(231) # PHD
+        self.e = self.f.add_subplot(233) # orders 
+        self.a = self.f.add_subplot(232) # raw
         self.e.tick_params(axis='both',labelsize=6)
         self.e.set_title("orders")
-        self.a.grid(False)
-        self.a.set_xlabel("x pixels", fontsize=10)
         self.a.tick_params(axis='both', labelsize=7)
-        self.a.set_ylabel("y pixels")
         self.a.set_title("2D raw data")
         self.b.set_title("1D extracted data")
         self.b.set_xlabel('pixels')
@@ -48,14 +45,13 @@ class MyWindow(Gtk.Window):
         self.c.set_title('PHD')
         self.c.tick_params(axis='both', labelsize=7)
         
-        
         self.canvas = FigureCanvas(self.f) 
              
         
-    # tool bar stuff     
+    # Navigtion toolbar stuff     
         
         toolbar = NavigationToolbar(self.canvas, self)
-        main_box = Gtk.Box(spacing = 2, orientation = Gtk.Orientation.VERTICAL)
+        main_box = Gtk.Box(spacing = 2, orientation = Gtk.Orientation.VERTICAL)  
         self.add(main_box)
         
     # button box
@@ -73,7 +69,6 @@ class MyWindow(Gtk.Window):
         
     # packing in main_box
         main_box.pack_start(self.canvas, True, True, 0)
-       
         main_box.pack_start(vbutton_box,False,False,0)
         main_box.pack_start(toolbar, False, False, 0)
             
@@ -87,32 +82,25 @@ class MyWindow(Gtk.Window):
 
     #this opens up the fits file
     	hdulist = fits.open(filename)
-    
-    	targname = hdulist[0].header['targname']    
+        targname = hdulist[0].header['targname']    
     
     #this picks out the actual data from fits file, and turns it into numpy array
     	scidata = hdulist['sci',2].data 
     	hdulist.close()
     
-   # old plot stuff  
-    	#plt.subplot(211)
-   	#plt.xlabel('pixels(x)')
-    	#plt.ylabel('pixels(y)')
-    	#plt.title(targname)
-    	#img = plt.imshow(scidata, vmin = 0, vmax = 255)
-    
     # sends 2d data to my gui plotting funtion	
     	self.update_plot(scidata)
     
-    # making an empty array to put the new values in
-    	y=[]
+   
+    ##### smashing 2D data into 1D to view orders as peaks ####
+    	
     
     # filling in y with the sums of the rows of scidata
+        y=[]
    	for i in range(0,len(scidata[0])):
         	t = np.sum(scidata[i,:])
         	y.append(t)
         
-
     # making an x axis with same dementions as y
     	x = np.linspace(0,len(scidata[0]), num = len(scidata[0]))
 
@@ -126,11 +114,6 @@ class MyWindow(Gtk.Window):
 	minv = chunk[0]
 	maxv = chunk[1]
  
-  # plotting for my own sake to check myself while making code
-	#plt.subplot(212)
-        #plt.plot(y,xrev)
-	#plt.ylabel('pixels(y)')
-	#plt.xlabel('Intensity')
 	
     #drawing box around my chunk to check makesure I have a good portion
 	#plt.hlines(chunk,[-1000],[5000],color='r')
@@ -190,34 +173,35 @@ class MyWindow(Gtk.Window):
 #       if len(val) == n:
 #          yield tuple(val)
 ############################################################################################################################3
-    	plt.figure(figsize=(7.5,8.4))
-    
-    #using scipy.signal.find_peaks_cwt() to find centers of orders.  this required scipy version .11.0 or greater
+    	
+    	#plt.figure(figsize=(7.5,8.4))
+    #
+    # using scipy.signal.find_peaks_cwt() to find centers of orders.  this required scipy version .11.0 or greater
     	peakind=signal.find_peaks_cwt(ychunk,np.arange(3,15))
     
-    #plotting chunk of data with lines through the centers of the orders to double check how the peak finder did
-    	#plt.subplot(211)   
-    	#plt.plot(xchunk,ychunk)
-    	#plt.vlines(xchunk[peakind],0,2000,color='purple',label='centers')
-    	#plt.title('chunk of data with centers found by find_peaks_cwt()')
-    	ovlines=xchunk[peakind]
-    	revlines=ovlines[::-1]
-    	self.update_ordersplot(ychunk,xrevchunk,revlines)
+    # plotting chunk of 1D data with lines through the centers of the orders to double check how the peak finder did
+
+    	lines=xchunk[peakind]
+    	revlines=lines[::-1]
+    	self.update_ordersplot(ychunk,xchunk,lines)
     
-    #find w, the widths of the orders
-    # first i make an array of the difference between peaks
+    
+    ### extraction of orders ###
+    
+    
+    # find w, the widths of the orders (difference between peaks)
+
     	w=[]
     	for i in range(1,len(peakind)):
     		t=peakind[i]-peakind[i-1]
     		w.append(t)
-    
-    
-    	avew=sum(w)/len(w)
+    	
     # i have to add an extra w at the end of the array to make it the right size i (hopefully this is kosher)
     	maxw=max(w)-4
     	w.append(maxw)
     
     # placeing verticle lines in the visualization where the widths would stand
+        #avew=sum(w)/len(w)
     	#wvlines=[]
     	#b=xchunk[peakind[0]]-avew/2
     	#wvlines.append(b)
@@ -227,11 +211,9 @@ class MyWindow(Gtk.Window):
     	#plt.vlines(wvlines,0,2500,color='r',linestyle='--',label='w boundries')
     	#plt.legend(loc=1)
     
-    ####extraction of orders
+    	#plt.figure()
     
-    	plt.figure()
-    
-    ### making arrays of 1s ans 0s and extracting the 1d orders into a dictionary called  oneDorders
+    ### making arrays of 1s ans 0s and extracting the 1d orders by matrix multiplication 
    	zeros=np.zeros((len(x),1))
     	index = range(0,len(w))
     	reindex = index[::-1]
@@ -241,34 +223,20 @@ class MyWindow(Gtk.Window):
     		zeros1=np.copy(zeros)
     		zeros1[ 1024 - (np.sum(w[(i):18])) : 1024 - np.sum(w[(i+1):18]) ] = 1
     		twoD = scidata*zeros1
-    		if i == 16:
-    			plt.subplot(211)
-    			plt.imshow(twoD)
-    			plt.title('sample of one of the orders in 1d and 2d') 	
-    		Y=[]
-     # making 2d orders in to 1d orders
+    			   		
+            # making 2d orders in to 1d orders
+                Y=[]
     		for j in range(0,len(scidata[0])):
         		t = np.sum(twoD[:,j])
         		Y.append(t)
+            # placing 1d orders in dictionary called oneDorders
         	oneDorders['order'+str(i)]=Y
-     # sending plotting info to update_1dplot for gui
+        	
+     # sending plotting info to update_1dplot for gui (for now using just on order until cross coralation is added to script
     	x = np.linspace(0,len(scidata[0]), num = len(scidata[0]))
-    	#plt.subplot(212)
-    	#plt.plot(x,oneDorders['order16'])
-    	odo=oneDorders['order16']
+        odo=oneDorders['order16']
     	self.update_1dplot(odo,x)
 
-         
-    ### turning 2D orders into 1D orders
-    #o1=[]
-    #1Dorders={}
-   # for i in range(0,len(scidata[0])):
-    #    t = np.sum([:,i])
-     #   o1.append(t)
-#    x1 = np.linspace(0,len(order1[0]), num = len(order1[0]))
-#    plt.subplot(212)
-#    plt.title('one order')
-#    plt.plot(x1,o1)
     	
 ###this next part was me fitting with air glow#######
 ####### fitting centers to line#####
@@ -342,37 +310,47 @@ class MyWindow(Gtk.Window):
 #    plt.legend(loc=4)
    
 
-### fake PDH stuff####\
-	x=np.arange(10)
-	y=(.2*x)**3
-	self.update_PHDplot(x,y)
-    
-    
-    	#plt.show()
-    	
-  ## plotting in gui
-    def update_plot(self, scidata):
-        self.plt= self.a.imshow(scidata, vmin = 0, vmax = 255)
-        
-        cbar=self.f.colorbar(self.plt,shrink=.90,pad=0.004)
-        #cbar.self.a.tick_params(labelsize=5) 
+### fake PDH stuff ### (fake data for now)
+	xphd=np.arange(10)
+	yphd=(.2*xphd)**3
+	self.update_PHDplot(xphd,yphd)
+	
+ ### preperation for guass fitting ###
+ 	#data = the 1d data between two mouse clicks or a box drawn
+ 	#mu = average inside that data area (center of peak) 	
+ 	#FWHM = sqrt(abs(sum((x-mu)**2*data)/sum(data)))
+ 	#max = data.max()
+ 	#gaussfit = lambda t : max*exp(-(t-mu)**2/(2*FWHM**2))
+ 	#plot(gaussfit(x))
+ 	
+ 	
 
     	
+### plotting in gui ###
+    def update_plot(self, scidata):
+        self.plt= self.a.imshow(scidata, vmin = 0, vmax = 255)
+        cbar=self.f.colorbar(self.plt,shrink=.84,pad=0.01)
+        #cbar.self.a.tick_params(labelsize=5) 
         self.canvas.draw()
+        
     def update_1dplot(self,odo,x):
-    	
     	self.plt=self.b.plot(x,odo)
-        
         self.canvas.draw()
         
-    def update_PHDplot(self,x,y):
-        self.plt=self.c.plot(x,y)
+    def update_PHDplot(self,xphd,yphd):
+        self.plt=self.c.plot(xphd,yphd)
         self.canvas.draw()
         
-    def update_ordersplot(self,y,xrev,revlines):
-        self.plt=self.e.plot(y,xrev)
-        self.e.hlines(revlines,0,2000,color='purple',label='centers')
+    def update_ordersplot(self,ychunk,xchunk,lines):
+        self.plt=self.e.plot(ychunk,xchunk)
+        self.e.hlines(lines,0,2000,color='purple',label='centers')
         self.canvas.draw()
+        
+ ##  preping for mouse interaction
+    #def onclick(event):
+    	#print event.button, event.x, event.y, event.xdata, event.ydata
+
+        cid = aelf.f.canvas.mpl_connect('button_press_event', onclick)
 
 
         
