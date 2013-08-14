@@ -311,9 +311,11 @@ class MyWindow(Gtk.Window):
    
 
 ### fake PDH stuff ### (fake data for now)
-	xphd=np.arange(10)
-	yphd=(.2*xphd)**3
-	self.update_PHDplot(xphd,yphd)
+	PHDfake = '/home/rachel/codes/chesstest.fits'
+	hdu = fits.open(PHDfake)
+	PHD = hdu[1].data['PHD']
+	self.update_PHDplot(PHD)
+	hdu.close()
 	
  ### preperation for guass fitting ###
  	#data = the 1d data between two mouse clicks or a box drawn
@@ -337,8 +339,8 @@ class MyWindow(Gtk.Window):
     	self.plt=self.b.plot(x,odo)
         self.canvas.draw()
         
-    def update_PHDplot(self,xphd,yphd):
-        self.plt=self.c.plot(xphd,yphd)
+    def update_PHDplot(self,PHD):
+        self.plt=self.c.hist(PHD,bins=80,histtype='stepfilled')
         self.canvas.draw()
         
     def update_ordersplot(self,ychunk,xchunk,lines):
@@ -350,7 +352,7 @@ class MyWindow(Gtk.Window):
     #def onclick(event):
     	#print event.button, event.x, event.y, event.xdata, event.ydata
 
-        cid = aelf.f.canvas.mpl_connect('button_press_event', onclick)
+        #cid = self.f.canvas.mpl_connect('button_press_event', onclick)
 
 
         
