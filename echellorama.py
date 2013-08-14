@@ -27,7 +27,11 @@ class MyWindow(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self,title="Echelle Reduction GUI")
   
-   ## setting up canvase for plotting ###     
+   ## setting up canvase for plotting ### 
+   
+        #self.box = Gtk.EventBox()
+        
+       
         self.set_default_size(1000,700)
     	self.f = Figure(figsize=(5,7), dpi=100)
         self.b = self.f.add_subplot(212) # 1D
@@ -42,35 +46,59 @@ class MyWindow(Gtk.Window):
         self.b.set_xlabel('pixels')
         self.b.set_ylabel('intensity')
         self.b.tick_params(axis='both', labelsize=7)
+        
+        #self.add(self.box)
+        
         self.c.set_title('PHD')
         self.c.tick_params(axis='both', labelsize=7)
         
         self.canvas = FigureCanvas(self.f) 
+        
+        #self.connect('button-press-event',lambda widget, event: sys.stdout.write('%s // %s\n'%(widget,event)))
              
         
     # Navigtion toolbar stuff     
         
         toolbar = NavigationToolbar(self.canvas, self)
-        main_box = Gtk.Box(spacing = 2, orientation = Gtk.Orientation.VERTICAL)  
+        main_box = Gtk.Box( orientation = Gtk.Orientation.VERTICAL)  
         self.add(main_box)
+     
+    # status bar
+        self.statusbar = Gtk.Statusbar()
+        #vbox.pack_start(self.statusbar, False, False, 0) 
+        context_id=self.statusbar.get_context_id("stat bar example")    
         
     # button box
-        vbutton_box = Gtk.HButtonBox()
+        vbutton_box = Gtk.Box(orientation = Gtk.Orientation.HORIZONTAL)#Gtk.HButtonBox()
         button1 = Gtk.Button('Raw count rate')
         button2 = Gtk.Button('Filter PHD')
-        button3 = Gtk.Button('Fit 1D Gauss')
+        
+        self.button3 = Gtk.Button(label='Fit 1D Gauss')
+        self.button3.connect("clicked", self.on_button3_clicked,context_id)
+        
+        
+        
         
         vbutton_box.pack_start(button1,True,True, 0)
         vbutton_box.pack_start(button2,True, True, 0)
-        vbutton_box.pack_start(button3,True, True, 0)
+        vbutton_box.pack_start(self.button3,True, True, 0)
+        
+    # status bar
+        self.statusbar = Gtk.Statusbar()
+        #vbox.pack_start(self.statusbar, False, False, 0) 
+        context_id=self.statusbar.get_context_id("stat bar example")   
         
         
         
         
     # packing in main_box
+        main_box.pack_start(self.statusbar, False,False,0)
         main_box.pack_start(self.canvas, True, True, 0)
         main_box.pack_start(vbutton_box,False,False,0)
         main_box.pack_start(toolbar, False, False, 0)
+        
+       
+        
             
         
     # passing in filename or sends error
@@ -326,6 +354,9 @@ class MyWindow(Gtk.Window):
  	#plot(gaussfit(x))
  	
  	
+ 	
+ 	
+ 	
 
     	
 ### plotting in gui ###
@@ -348,11 +379,32 @@ class MyWindow(Gtk.Window):
         self.e.hlines(lines,0,2000,color='purple',label='centers')
         self.canvas.draw()
         
- ##  preping for mouse interaction
-    #def onclick(event):
-    	#print event.button, event.x, event.y, event.xdata, event.ydata
+      
+  ## gauss fitting button 
+          
+    def on_button3_clicked(self, widget, data):
+         self.statusbar.push(data,'Ready to fit. Click on both sides of the emission feature you wish to fit')
+         
+         def onclick(event):
+               xleft = event.xdata
+               print xleft
+ 		
+    	  
+    	 cid = self.canvas.mpl_connect('button_press_event', onclick)
+         
+ 	 
+ 	 
+ 	 
+ 	 
+ 	 
+   
+ 	 
+    	 
+    	 
+    
+    
 
-        #cid = self.f.canvas.mpl_connect('button_press_event', onclick)
+    
 
 
         
