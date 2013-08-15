@@ -14,10 +14,14 @@ import astropy.io.fits as fits
 import numpy as np
 from scipy import signal
 from gi.repository import Gtk, GObject
+import math
+
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_gtk3cairo import FigureCanvasGTK3Cairo as FigureCanvas
 from matplotlib.backends.backend_gtk3 import NavigationToolbar2GTK3 as NavigationToolbar
+
+import pickle
 
 
 
@@ -47,6 +51,8 @@ class MyWindow(Gtk.Window):
         self.b.set_ylabel('intensity')
         self.b.tick_params(axis='both', labelsize=7)
         
+        #self.xdata=[]
+        
         #self.add(self.box)
         
         self.c.set_title('PHD')
@@ -70,23 +76,23 @@ class MyWindow(Gtk.Window):
         
     # button box
         vbutton_box = Gtk.Box(orientation = Gtk.Orientation.HORIZONTAL)#Gtk.HButtonBox()
-        button1 = Gtk.Button('Raw count rate')
+        self.button1 = Gtk.Button('Raw count rate')
+        self.button1.connect("clicked", self.on_button1_clicked, context_id)
         button2 = Gtk.Button('Filter PHD')
         
         self.button3 = Gtk.Button(label='Fit 1D Gauss')
-        self.button3.connect("clicked", self.on_button3_clicked,context_id)
+        self.button3.connect("clicked", self.on_button3_clicked,  context_id)
+        #watch = Gtk.gdk.Cursor(gtk.gdk.WATCH)
+        #self.button3.connect("realize", realize_cb)
         
         
         
         
-        vbutton_box.pack_start(button1,True,True, 0)
+        vbutton_box.pack_start(self.button1,True,True, 0)
         vbutton_box.pack_start(button2,True, True, 0)
         vbutton_box.pack_start(self.button3,True, True, 0)
         
-    # status bar
-        self.statusbar = Gtk.Statusbar()
-        #vbox.pack_start(self.statusbar, False, False, 0) 
-        context_id=self.statusbar.get_context_id("stat bar example")   
+      
         
         
         
@@ -261,8 +267,9 @@ class MyWindow(Gtk.Window):
         	oneDorders['order'+str(i)]=Y
         	
      # sending plotting info to update_1dplot for gui (for now using just on order until cross coralation is added to script
-    	x = np.linspace(0,len(scidata[0]), num = len(scidata[0]))
-        odo=oneDorders['order16']
+    	self.x = np.linspace(0,len(scidata[0]), num = len(scidata[0]))
+        self.odo=oneDorders['order16']
+        odo = self.odo[:]
     	self.update_1dplot(odo,x)
 
     	
@@ -345,15 +352,40 @@ class MyWindow(Gtk.Window):
 	self.update_PHDplot(PHD)
 	hdu.close()
 	
- ### preperation for guass fitting ###
+	
+	
+ ### guass fitting ###
+        self.xdata=[]
+    def gauss_fit(self,xdata):
+        #print 'clicks at:', xdata
+        x = list(self.x)
+        xg=[]
+        
+        xg.append(int(xdata[0]))
+        xg.append(int(xdata[1]))        
+        xgauss = x[xg[0]:xg[1]]
+        ygauss = self.odo[xg[0]:xg[1]]
+        
+        
  	#data = the 1d data between two mouse clicks or a box drawn
- 	#mu = average inside that data area (center of peak) 	
- 	#FWHM = sqrt(abs(sum((x-mu)**2*data)/sum(data)))
- 	#max = data.max()
- 	#gaussfit = lambda t : max*exp(-(t-mu)**2/(2*FWHM**2))
+ 	mu = sum(xgauss)/len(xgauss) 	
+ 	FWHM = (abs(sum((xgauss-mu)**2*ygauss)/sum(ygauss)))
+ 	FWHM = math.sqrt(FWHM)
+ 	maximum = max(ygauss)
+ 	
+ 	gaussfit = lambda t : maximum*math.exp(-(t-mu)**2/(2*FWHM**2))
+ 	gfit = []
+ 	for i in range(0,len(ygauss)):
+ 		gfit.append(gaussfit(xgauss[i]))
+ 	plt.figure()
+ 	fit = plt.plot(xgauss,gfit,xgauss,ygauss)
+ 	#xy = plt.plot(xgauss,ygauss)
  	#plot(gaussfit(x))
- 	
- 	
+        plt.show(fit)
+       # plt.show(xy)
+        
+    	
+    	
  	
  	
  	
@@ -367,7 +399,8 @@ class MyWindow(Gtk.Window):
         self.canvas.draw()
         
     def update_1dplot(self,odo,x):
-    	self.plt=self.b.plot(x,odo)
+    	self.plt=self.b.plot(x,self.odo)
+    	
         self.canvas.draw()
         
     def update_PHDplot(self,PHD):
@@ -381,17 +414,57 @@ class MyWindow(Gtk.Window):
         
       
   ## gauss fitting button 
+    
           
     def on_button3_clicked(self, widget, data):
-         self.statusbar.push(data,'Ready to fit. Click on both sides of the emission feature you wish to fit')
+         self.statusbar.push(data,'Ready to fit.  Click on both sides of the emission feature you wish to fit')
          
-         def onclick(event):
-               xleft = event.xdata
-               print xleft
+         
+    	 def onclick(event):
+    	         
+    	         self.xdata.append(event.xdata)
+        	 #xdata = event.xdata
+        	 #self.xdata.append(xdata)
+        	 if len(self.xdata) == 2:
+        	 	self.statusbar.push(data,'fitting...')
+        	 	xdata=self.xdata
+    	                self.gauss_fit(xdata)
+        	 
+      
+         
+               
+   ###  mouse click event 	
+    	 cid = self.canvas.mpl_connect('button_press_event', onclick)
+
+    	 #xdata=self.xdata
+    	 #self.gauss_fit(xdata)
+    	
+    	 
+    	 
+    def on_button1_clicked(self, widget,data):
+    	self.statusbar.push(data,'Use mouse to draw box in 2d data area to see count rate')
+    	
+    	def onclick2(event):
+                  print event.xdata, event.ydata
+                  
+        def offclick2(event):
+                  print event.xdata, event.ydata
+                  self.statusbar.push(data,'count rate = ')
+         
+        cid2 = self.canvas.mpl_connect('button_press_event',onclick2 )
+        cid3 = self.canvas.mpl_connect('button_release_event',offclick2 )
+        
+    
+    
+    	 
+    	 
+    	 
+    #def realize_cb(self, widget):
+   	 #self.button3.window.set_cursor(watch)
+    	
  		
     	  
-    	 cid = self.canvas.mpl_connect('button_press_event', onclick)
-         
+    	 
  	 
  	 
  	 
