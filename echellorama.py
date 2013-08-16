@@ -220,34 +220,37 @@ class MyWindow(Gtk.Window):
         x = list(self.x)
         xg=[]     
         xg.append(int(xdata[0]))
-        xg.append(int(xdata[1]))        
-        xgauss = x[xg[0]:xg[1]]
-        ygauss = self.odo[xg[0]:xg[1]]
+        xg.append(int(xdata[1])) 
+        xg1 = min(xg)
+        xg2 = max(xg)       
+        xgauss = x[xg1:xg2]
+        ygauss = self.odo[xg1:xg2]
         
+       # makeing a model gauss
         def gauss(xgauss,MAX,mu,sigma):
         	return MAX*np.exp(-(xgauss-mu)**2/(2.*sigma**2))
         avex = sum(xgauss)/len(xgauss) 
         guess = [1.,avex,1.]
+       # plugging in model to matplotlibs curve_fit()
         coeff, var_matrix = curve_fit(gauss,xgauss,ygauss,p0=guess) 
         fit = gauss(xgauss, *coeff)
-      
- 
- 	plt.figure()
+        sigma = coeff[2]
+        FWHM = sigma*2*np.sqrt(2*np.log(2))
  	fitplot = plt.plot(xgauss,ygauss,xgauss,fit)
- 	#fitplot.text()
- 	print coeff
-        plt.show(fitplot)
+ 	xpos = xgauss[0]+.01*(coeff[1]-xgauss[0])
+ 	strFWHM = str(FWHM)
+ 	plt.text(xpos,.9*max(ygauss),'FWHM = '+strFWHM+'',color = 'purple',fontweight = 'bold')
+ 	
+ 	plt.show(fitplot)
+ 	self.xdata = []
+ 	
        
         
         
-    	
-    	
- 	
- 	
- 	
+   
 
     	
-### plotting in gui ###
+### plotting subpots in main gui ###
     def update_plot(self, scidata):
         self.plt= self.a.imshow(scidata, vmin = 0, vmax = 255)
         cbar=self.f.colorbar(self.plt,shrink=.84,pad=0.01)
@@ -266,37 +269,30 @@ class MyWindow(Gtk.Window):
     def update_ordersplot(self,ychunk,xchunk,lines):
         self.plt=self.e.plot(ychunk,xchunk)
         self.e.hlines(lines,0,2000,color='purple',label='centers')
-        self.canvas.draw()
-        
+        self.canvas.draw()      
       
+  
   ## gauss fitting button 
     
-          
     def on_button3_clicked(self, widget, data):
          self.statusbar.push(data,'Ready to fit.  Click on both sides of the emission feature you wish to fit')
-         
+         self.xdata = []
          
     	 def onclick(event):
     	         
     	         self.xdata.append(event.xdata)
-        	 #xdata = event.xdata
-        	 #self.xdata.append(xdata)
+    	         self.statusbar.push(data,'one more click...')
         	 if len(self.xdata) == 2:
-        	 	self.statusbar.push(data,'fitting...')
+        	        self.statusbar.push(data,'Ready to fit.  Click on both sides of the emission feature you wish to fit')
         	 	xdata=self.xdata
     	                self.gauss_fit(xdata)
-        	 
-      
-         
-               
-   ###  mouse click event 	
+    	                
+              
+   #  mouse click event on 1d	
     	 cid = self.canvas.mpl_connect('button_press_event', onclick)
+    	 
 
-    	 #xdata=self.xdata
-    	 #self.gauss_fit(xdata)
-    	
-    	 
-    	 
+   ### count rate button  
     def on_button1_clicked(self, widget,data):
     	self.statusbar.push(data,'Use mouse to draw box in 2d data area to see count rate')
     	
@@ -306,9 +302,11 @@ class MyWindow(Gtk.Window):
         def offclick2(event):
                   print event.xdata, event.ydata
                   self.statusbar.push(data,'count rate = ')
-         
+        
         cid2 = self.canvas.mpl_connect('button_press_event',onclick2 )
         cid3 = self.canvas.mpl_connect('button_release_event',offclick2 )
+         
+        
         
     
     
