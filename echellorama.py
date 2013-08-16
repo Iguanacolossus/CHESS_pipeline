@@ -15,13 +15,13 @@ import numpy as np
 from scipy import signal
 from gi.repository import Gtk, GObject
 import math
-
+from scipy.optimize import curve_fit
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_gtk3cairo import FigureCanvasGTK3Cairo as FigureCanvas
 from matplotlib.backends.backend_gtk3 import NavigationToolbar2GTK3 as NavigationToolbar
 
-import pickle
+
 
 
 
@@ -50,18 +50,11 @@ class MyWindow(Gtk.Window):
         self.b.set_xlabel('pixels')
         self.b.set_ylabel('intensity')
         self.b.tick_params(axis='both', labelsize=7)
-        
-        #self.xdata=[]
-        
-        #self.add(self.box)
-        
         self.c.set_title('PHD')
         self.c.tick_params(axis='both', labelsize=7)
         
         self.canvas = FigureCanvas(self.f) 
         
-        #self.connect('button-press-event',lambda widget, event: sys.stdout.write('%s // %s\n'%(widget,event)))
-             
         
     # Navigtion toolbar stuff     
         
@@ -71,31 +64,23 @@ class MyWindow(Gtk.Window):
      
     # status bar
         self.statusbar = Gtk.Statusbar()
-        #vbox.pack_start(self.statusbar, False, False, 0) 
         context_id=self.statusbar.get_context_id("stat bar example")    
         
     # button box
-        vbutton_box = Gtk.Box(orientation = Gtk.Orientation.HORIZONTAL)#Gtk.HButtonBox()
+        vbutton_box = Gtk.Box(orientation = Gtk.Orientation.HORIZONTAL)
         self.button1 = Gtk.Button('Raw count rate')
         self.button1.connect("clicked", self.on_button1_clicked, context_id)
         button2 = Gtk.Button('Filter PHD')
         
         self.button3 = Gtk.Button(label='Fit 1D Gauss')
         self.button3.connect("clicked", self.on_button3_clicked,  context_id)
-        #watch = Gtk.gdk.Cursor(gtk.gdk.WATCH)
-        #self.button3.connect("realize", realize_cb)
-        
-        
         
         
         vbutton_box.pack_start(self.button1,True,True, 0)
         vbutton_box.pack_start(button2,True, True, 0)
         vbutton_box.pack_start(self.button3,True, True, 0)
         
-      
-        
-        
-        
+     
         
     # packing in main_box
         main_box.pack_start(self.statusbar, False,False,0)
@@ -103,9 +88,7 @@ class MyWindow(Gtk.Window):
         main_box.pack_start(vbutton_box,False,False,0)
         main_box.pack_start(toolbar, False, False, 0)
         
-       
         
-            
         
     # passing in filename or sends error
     	if (len(sys.argv) < 2):
@@ -164,49 +147,6 @@ class MyWindow(Gtk.Window):
     	
     	
     
-####  this is my manual code for making a zero backgrounds then finding the value at each peak############################
-#    #creating a new baseline
-#   for i in range(0,xchunk.size):
-#        if ychunk[i] < bgcutoff:
-#            ychunk[i] = 0
-#
-#
-#    #plt.plot(ychunk,xrevchunk)
-#    #plt.show()
-#
-#    bounds = []
-#    a = ychunk
-#    # find the bounds of a order by indice in the array
-#    for i in range(1, len(a)):
-#        if a[i-1] == 0 and a[i] > 0:
-#           # print(i , "begin hump index")
-#            bounds.append(i)
-#        if a[i-1] > 0 and a[i] == 0:
-#           # print(i-1, "end hump index")
-#            bounds.append(i - 1)
-#
-#    # now 'bounds' is a list of the indices of the array were a #order begins and ends
-#  
-#    # 'bounds' but now grouped
-#    grpbounds = list(group(bounds, 2))
-#
-#    centers = []
-#    # finding max with in the bouds of the orders and reading them #in
-#    # to 'centers' list
-#    for i in range(len(grpbounds)):
-#        centers.append(max(a[grpbounds[i][0]:grpbounds[i][1]+1]))
-#   
-# 
-#    #print a.index(centers)
-    
-# defining a function to group the indecies of 'bounds' to # sets of
-# (begin order, end order)
-#def group(lst,n):
-#    for i in range(0, len(lst), n):
-#       val=lst[i:i+n]
-#       if len(val) == n:
-#          yield tuple(val)
-############################################################################################################################3
     	
     	#plt.figure(figsize=(7.5,8.4))
     #
@@ -234,18 +174,6 @@ class MyWindow(Gtk.Window):
     	maxw=max(w)-4
     	w.append(maxw)
     
-    # placeing verticle lines in the visualization where the widths would stand
-        #avew=sum(w)/len(w)
-    	#wvlines=[]
-    	#b=xchunk[peakind[0]]-avew/2
-    	#wvlines.append(b)
-    	#for i in np.arange(len(peakind)):
-    		#f=xchunk[peakind[i]]+w[i]/2
-    		#wvlines.append(f)
-    	#plt.vlines(wvlines,0,2500,color='r',linestyle='--',label='w boundries')
-    	#plt.legend(loc=1)
-    
-    	#plt.figure()
     
     ### making arrays of 1s ans 0s and extracting the 1d orders by matrix multiplication 
    	zeros=np.zeros((len(x),1))
@@ -273,76 +201,7 @@ class MyWindow(Gtk.Window):
     	self.update_1dplot(odo,x)
 
     	
-###this next part was me fitting with air glow#######
-####### fitting centers to line#####
-    #plt.subplot(324)
-    #plt.plot(np.zeros(len(peakind)),xchunk[peakind],marker='o',linestyle='none',color='purple',label="order centers")
-#    plt.xlabel('yaxis on detector')
-#    plt.ylabel('order center index')
-#    #plt.title('center possitions with repect to verticle postion on detector')
-    
-#    print len(range(int(min(xchunk)),int(max(xchunk)),len(peakind)))
-#    print len(xchunk[peakind])
-    
-    #fit=np.polyfit(np.zeros(len(peakind)),xchunk[peakind],2)
-     
-    
-    #xfit=np.zeros(len(peakind))
-    #print xchunk[peakind]
-    #linefit=fit[2] + fit[1]*xfit + fit[0]*(xfit**2)
-#    deg0 = str.format('{0:.2f}', fit[0])
-#    deg1 = str.format('{0:.2f}', fit[1])
-#    deg2 = str.format('{0:.2f}', fit[2])
-    #plt.plot(np.zeros(len(peakind)),linefit,color='r',linestyle='--')#,label='$x^2$'+deg0+'$+x$'+deg1+'$+$'+deg2+'')
-#    #plt.legend(loc=2)
-    #
-#   #arange= int(min(xchunk[peakind]))
-#   # brange= int(max(xchunk[peakind]))
-#   # crange= int(len(xchunk))+1
-#   # print len(range(arange,brange,crange))
-    
-#    #print len(xchunk[peakind])
-#    #plt.plot(range(arange,brange,crange),xchunk[peakind],marker='o',linestyle='none',color='purple',label="centers of orders")
-    
-#    # filling in for the missing centers with the new centers funtion(linefit)
-#    plt.subplot(323)
-#    allcen=fit[2] + fit[1]*x + fit[0]*(x**2)
-    
-#    allcen=[i for i in allcen if i < max(x)]
-#    plt.vlines(x[allcen],0,3000,color='purple')
-#    plt.plot(x,y)
-    
-#   # print allcen
-#  #  print peakind
-    
-#    plt.subplot(322)
 
-###### finding and fitting spacing between orders####    
-#    orderspace=[]
-#    for i in range(1,len(peakind)):
-#    	t=peakind[i]-peakind[i-1]
-#    	orderspace.append(t)
-    	
-#    peakind.remove(peakind[0])
-#    #print len(peakind)
-    #plt.figure()
-    #for i in range(1,len(w)):
-    #	w[i]=w[0]+w[i]
-    #w[0]=w[0]*2
-    #plt.plot(xchunk[peakind],w,marker='o',linestyle='none',color='purple',label="space between orders")
-    #plt.ylabel('w')
-    #plt.xlabel('pixels along yaxis of detector')
-#    plt.ylabel('order spaceing by pixel')
-#    plt.title('center possitions with repect to verticle postion on detector')
-    
-    ##fitting orderspaceing to line
-    #fit=np.polyfit(xchunk[peakind],w,2)
-    #linefit=fit[2] + fit[1]*xchunk + fit[0]*(xchunk**2)
-    #deg0 = str.format('{0:.2f}', fit[0])
-    #deg1 = str.format('{0:.2f}', fit[1])
-    #deg2 = str.format('{0:.2f}', fit[2])
-    #plt.plot(xchunk, linefit, color='r', linestyle='--', label='$x^2$'+deg0+'$+x$'+deg1+'$+$'+deg2+'')
-#    plt.legend(loc=4)
    
 
 ### fake PDH stuff ### (fake data for now)
@@ -357,32 +216,28 @@ class MyWindow(Gtk.Window):
  ### guass fitting ###
         self.xdata=[]
     def gauss_fit(self,xdata):
-        #print 'clicks at:', xdata
-        x = list(self.x)
-        xg=[]
         
+        x = list(self.x)
+        xg=[]     
         xg.append(int(xdata[0]))
         xg.append(int(xdata[1]))        
         xgauss = x[xg[0]:xg[1]]
         ygauss = self.odo[xg[0]:xg[1]]
         
-        
- 	#data = the 1d data between two mouse clicks or a box drawn
- 	mu = sum(xgauss)/len(xgauss) 	
- 	FWHM = (abs(sum((xgauss-mu)**2*ygauss)/sum(ygauss)))
- 	FWHM = math.sqrt(FWHM)
- 	maximum = max(ygauss)
- 	
- 	gaussfit = lambda t : maximum*math.exp(-(t-mu)**2/(2*FWHM**2))
- 	gfit = []
- 	for i in range(0,len(ygauss)):
- 		gfit.append(gaussfit(xgauss[i]))
+        def gauss(xgauss,MAX,mu,sigma):
+        	return MAX*np.exp(-(xgauss-mu)**2/(2.*sigma**2))
+        avex = sum(xgauss)/len(xgauss) 
+        guess = [1.,avex,1.]
+        coeff, var_matrix = curve_fit(gauss,xgauss,ygauss,p0=guess) 
+        fit = gauss(xgauss, *coeff)
+      
+ 
  	plt.figure()
- 	fit = plt.plot(xgauss,gfit,xgauss,ygauss)
- 	#xy = plt.plot(xgauss,ygauss)
- 	#plot(gaussfit(x))
+ 	fitplot = plt.plot(xgauss,ygauss,xgauss,fit)
+ 	#fitplot.text()
         plt.show(fit)
-       # plt.show(xy)
+       
+        
         
     	
     	
@@ -455,33 +310,6 @@ class MyWindow(Gtk.Window):
         cid3 = self.canvas.mpl_connect('button_release_event',offclick2 )
         
     
-    
-    	 
-    	 
-    	 
-    #def realize_cb(self, widget):
-   	 #self.button3.window.set_cursor(watch)
-    	
- 		
-    	  
-    	 
- 	 
- 	 
- 	 
- 	 
- 	 
-   
- 	 
-    	 
-    	 
-    
-    
-
-    
-
-
-        
-
     
 
 
