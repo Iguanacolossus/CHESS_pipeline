@@ -235,7 +235,8 @@ class MyWindow(Gtk.Window):
  	plt.figure()
  	fitplot = plt.plot(xgauss,ygauss,xgauss,fit)
  	#fitplot.text()
-        plt.show(fit)
+ 	print coeff
+        plt.show(fitplot)
        
         
         
