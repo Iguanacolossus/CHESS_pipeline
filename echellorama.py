@@ -13,9 +13,10 @@ import sys
 import astropy.io.fits as fits
 import numpy as np
 from scipy import signal
-from gi.repository import Gtk, GObject
+from gi.repository import Gtk, GObject, Gdk
 import math
 from scipy.optimize import curve_fit
+
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_gtk3cairo import FigureCanvasGTK3Cairo as FigureCanvas
@@ -107,7 +108,7 @@ class MyWindow(Gtk.Window):
     
     # sends 2d data to my gui plotting funtion	
     	self.update_plot(scidata)
-    
+        self.scidata = scidata
    
     ##### smashing 2D data into 1D to view orders as peaks ####
     	
@@ -244,6 +245,22 @@ class MyWindow(Gtk.Window):
  	plt.show(fitplot)
  	self.xdata = []
  	
+ ### count rate #####
+        self.dragbox=[]
+    def cnt_rate(self,dragbox,data):
+        # fake exposure time in seconds
+    	time = 30
+    	dragbox = [int(x) for x in dragbox]
+    	cntbox = self.scidata[dragbox[1]:dragbox[3],dragbox[0]:dragbox[2]]
+    	totpix = np.size(cntbox)
+    	cntrate = np.sum(cntbox)/time
+    	totpix = str(totpix)
+    	cntrate = str(cntrate)
+    	self.statusbar.push(data,'count rate in box = '+cntrate+'cnt/sec,    pixels in box = '+totpix+'')
+    	self.dragbox = []
+    	
+    	#
+    	
        
         
         
@@ -255,6 +272,7 @@ class MyWindow(Gtk.Window):
         self.plt= self.a.imshow(scidata, vmin = 0, vmax = 255)
         cbar=self.f.colorbar(self.plt,shrink=.84,pad=0.01)
         #cbar.self.a.tick_params(labelsize=5) 
+        
         self.canvas.draw()
         
     def update_1dplot(self,odo,x):
@@ -294,18 +312,36 @@ class MyWindow(Gtk.Window):
 
    ### count rate button  
     def on_button1_clicked(self, widget,data):
-    	self.statusbar.push(data,'Use mouse to draw box in 2d data area to see count rate')
+    	self.statusbar.push(data,'Use zoom feature in navigation bar to select count rate region')
+    	
+    	#scidata = self.scidata
+    	#m=plt.imshow(scidata,vmin = 0, vmax = 255, aspect = 'auto') 	
+    	#ain_box2 = Gtk.Box( orientation = Gtk.Orientation.VERTICAL)  
+        #im.add(main_box2)
+        #statusbar = Gtk.Statusbar()
+        #context_id=statusbar.get_context_id("stat bar example") 
+        #main_box2.pack_start(statusbar, False,False,0)    
+    	#plt.show()
+    	self.dragbox=[]
+    	
     	
     	def onclick2(event):
-                  print event.xdata, event.ydata
+                  #print event.xdata, event.ydata
+                  self.dragbox.append(event.xdata)
+                  self.dragbox.append(event.ydata)
                   
         def offclick2(event):
-                  print event.xdata, event.ydata
-                  self.statusbar.push(data,'count rate = ')
-        
+                 # print event.xdata, event.ydata
+                  
+                  self.dragbox.append(event.xdata)
+                  self.dragbox.append(event.ydata)
+                  dragbox = self.dragbox
+                  self.cnt_rate(dragbox,data)
+                  
+                  
         cid2 = self.canvas.mpl_connect('button_press_event',onclick2 )
         cid3 = self.canvas.mpl_connect('button_release_event',offclick2 )
-         
+        
         
         
     
