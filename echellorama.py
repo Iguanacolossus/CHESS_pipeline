@@ -71,14 +71,15 @@ class MyWindow(Gtk.Window):
         vbutton_box = Gtk.Box(orientation = Gtk.Orientation.HORIZONTAL)
         self.button1 = Gtk.Button('Raw count rate')
         self.button1.connect("clicked", self.on_button1_clicked, context_id)
-        button2 = Gtk.Button('Filter PHD')
+        self.button2 = Gtk.Button('Filter PHD')
+        self.button2.connect("clicked",self.on_button2_clicked,context_id)
         
         self.button3 = Gtk.Button(label='Fit 1D Gauss')
         self.button3.connect("clicked", self.on_button3_clicked,  context_id)
         
         
         vbutton_box.pack_start(self.button1,True,True, 0)
-        vbutton_box.pack_start(button2,True, True, 0)
+        vbutton_box.pack_start(self.button2,True, True, 0)
         vbutton_box.pack_start(self.button3,True, True, 0)
         
      
@@ -249,14 +250,17 @@ class MyWindow(Gtk.Window):
         self.dragbox=[]
     def cnt_rate(self,dragbox,data):
         # fake exposure time in seconds
-    	time = 30
+        datafake = '/home/rachel/codes/chesstest.fits'
+	hdu = fits.open(datafake)
+	exptime = hdu[0].header['EXPOSURE']
+    	
     	dragbox = [int(x) for x in dragbox]
     	cntbox = self.scidata[dragbox[1]:dragbox[3],dragbox[0]:dragbox[2]]
     	totpix = np.size(cntbox)
-    	cntrate = np.sum(cntbox)/time
+    	cntrate = np.sum(cntbox)/exptime
     	totpix = str(totpix)
     	cntrate = str(cntrate)
-    	self.statusbar.push(data,'count rate in box = '+cntrate+'cnt/sec,    pixels in box = '+totpix+'')
+    	self.statusbar.push(data,'count rate in box = '+cntrate+' cnt/sec,    pixels in box = '+totpix+'')
     	self.dragbox = []
     	
     	#
@@ -342,10 +346,41 @@ class MyWindow(Gtk.Window):
         cid2 = self.canvas.mpl_connect('button_press_event',onclick2 )
         cid3 = self.canvas.mpl_connect('button_release_event',offclick2 )
         
+    #### phd filter button ##
+    def on_button2_clicked(self,widget,data):
+    	phd_window = Gtk.Window()
+    	phd_window.set_size_request(500,100)
+    	#phd_window.connect("delet_event",lambda w,e:)    
+        
+        thebox = Gtk.HBox(False, 0)
+        phd_window.add(thebox)
+        label = Gtk.Label("Discard PHD between")
+        label2 = Gtk.Label('and')
+        label.show()
+        label2.show()
+        thebox.pack_start(label,False,False,0)
+        
+        entry = Gtk.Entry()
+        entry.connect("changed",self.entry_callback,entry)
+        entry.select_region(0, len(entry.get_text()))
+        entry2 = Gtk.Entry()
+        entry2.connect("changed",self.entry_callback,entry2)
+        entry2.select_region(0,len(entry2.get_text()))
+        entry.show()
+        entry2.show()
+        thebox.pack_start(entry,False,False,0)
+        
+        thebox.pack_start(label2,False,False,0)
+        thebox.pack_start(entry2,False,False,0)
         
         
+        thebox.show()
+        phd_window.show()
     
-    
+    def entry_callback(self,widget,entry,entry2):
+    	entry_text = entry.get_text()
+    	#print entry_text
+        return
 
 
 
