@@ -367,21 +367,20 @@ class MyWindow(Gtk.Window):
         self.okbutton = Gtk.Button('Okay')
         self.okbutton.connect('clicked',self.phd_entry_button)
         
-        entry = Gtk.Entry()
-        entry.connect("changed",self.phd_entry_button,entry)
-        entry.select_region(0, len(entry.get_text()))
-        entry2 = Gtk.Entry()
-        #entry2.connect("changed",self.entry_callback,entry2)
-        #entry2.select_region(0,len(entry2.get_text()))
-        entry.show()
-        entry2.show()
+        self.entry = Gtk.Entry()
+        self.entry.set_activates_default(True)
+        
+        self.entry2 = Gtk.Entry()
+        self.entry2.set_activates_default(True)
+        self.entry.show()
+        self.entry2.show()
         self.okbutton.show()
         
         thebox.pack_start(label,False,False,0)
-        thebox.pack_start(entry,False,False,0)
+        thebox.pack_start(self.entry,False,False,0)
         
         thebox.pack_start(label2,False,False,0)
-        thebox.pack_start(entry2,False,False,0)
+        thebox.pack_start(self.entry2,False,False,0)
         mainbox.pack_start(thebox,True,True,0)
         mainbox.pack_start(self.okbutton,True,False,0)
        
@@ -392,9 +391,10 @@ class MyWindow(Gtk.Window):
         thebox.show()
         phd_window.show()
     
-    def phd_entry_button(self,widget,data):
-        minphd = entry.get_text()
-        print minphd
+    def phd_entry_button(self,widget):
+        minphd = self.entry.get_text()
+        maxphd = self.entry2.get_text()
+        print minphd, maxphd
     	
 
 
