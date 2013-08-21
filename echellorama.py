@@ -347,40 +347,55 @@ class MyWindow(Gtk.Window):
         cid3 = self.canvas.mpl_connect('button_release_event',offclick2 )
         
     #### phd filter button ##
+    
     def on_button2_clicked(self,widget,data):
     	phd_window = Gtk.Window()
     	phd_window.set_size_request(500,100)
+    	phd_window.move(400, 300)
     	#phd_window.connect("delet_event",lambda w,e:)    
         
+        mainbox = Gtk.Box( orientation = Gtk.Orientation.VERTICAL) 
+        phd_window.add(mainbox)
         thebox = Gtk.HBox(False, 0)
-        phd_window.add(thebox)
+        
         label = Gtk.Label("Discard PHD between")
         label2 = Gtk.Label('and')
+        
         label.show()
         label2.show()
-        thebox.pack_start(label,False,False,0)
+        
+        self.okbutton = Gtk.Button('Okay')
+        self.okbutton.connect('clicked',self.phd_entry_button)
         
         entry = Gtk.Entry()
-        entry.connect("changed",self.entry_callback,entry)
+        entry.connect("changed",self.phd_entry_button,entry)
         entry.select_region(0, len(entry.get_text()))
         entry2 = Gtk.Entry()
-        entry2.connect("changed",self.entry_callback,entry2)
-        entry2.select_region(0,len(entry2.get_text()))
+        #entry2.connect("changed",self.entry_callback,entry2)
+        #entry2.select_region(0,len(entry2.get_text()))
         entry.show()
         entry2.show()
+        self.okbutton.show()
+        
+        thebox.pack_start(label,False,False,0)
         thebox.pack_start(entry,False,False,0)
         
         thebox.pack_start(label2,False,False,0)
         thebox.pack_start(entry2,False,False,0)
+        mainbox.pack_start(thebox,True,True,0)
+        mainbox.pack_start(self.okbutton,True,False,0)
+       
         
         
+        
+        mainbox.show()
         thebox.show()
         phd_window.show()
     
-    def entry_callback(self,widget,entry,entry2):
-    	entry_text = entry.get_text()
-    	#print entry_text
-        return
+    def phd_entry_button(self,widget,data):
+        minphd = entry.get_text()
+        print minphd
+    	
 
 
 
