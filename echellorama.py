@@ -263,7 +263,26 @@ class MyWindow(Gtk.Window):
     	self.statusbar.push(data,'count rate in box = '+cntrate+' cnt/sec,    pixels in box = '+totpix+'')
     	self.dragbox = []
     	
-    	#
+    ### phd filter function 33
+    def filter_phd(self, phdfilt):
+        phdfilt = [int(x) for x in phdfilt]
+        
+    	
+    	fakedata = '/home/rachel/codes/chesstest.fits'
+	hdu = fits.open(fakedata)
+	PHD = hdu[1].data['PHD']
+	PHD = np.array(PHD)
+	data  = hdu[1].data
+	newdata = data[(PHD > phdfilt[0]) & (PHD < phdfilt[1])]
+	
+	
+	plt.subplot(221)
+	oldplot = plt.plot(data['X'],data['Y'],linestyle = '',marker = '.')
+	
+	plt.subplot(222)
+	newplot = plt.plot(newdata['X'],newdata['Y'],linestyle = '',marker = '.')
+	
+	plt.show()
     	
        
         
@@ -349,13 +368,14 @@ class MyWindow(Gtk.Window):
     #### phd filter button ##
     
     def on_button2_clicked(self,widget,data):
-    	phd_window = Gtk.Window()
-    	phd_window.set_size_request(500,100)
-    	phd_window.move(400, 300)
-    	#phd_window.connect("delet_event",lambda w,e:)    
+    	self.phd_window = Gtk.MessageDialog(image = None)
+    	self.phd_window.set_size_request(500,100)
+    	self.phd_window.move(400, 300)
+    	#self.phd_window.connect("delet_event",lambda w,e:)    
         
-        mainbox = Gtk.Box( orientation = Gtk.Orientation.VERTICAL) 
-        phd_window.add(mainbox)
+        #mainbox = Gtk.Box( orientation = Gtk.Orientation.VERTICAL) 
+        mainbox = self.phd_window.get_content_area()
+        self.phd_window.add(mainbox)
         thebox = Gtk.HBox(False, 0)
         
         label = Gtk.Label("Discard PHD between")
@@ -389,12 +409,15 @@ class MyWindow(Gtk.Window):
         
         mainbox.show()
         thebox.show()
-        phd_window.show()
+        self.phd_window.show()
     
     def phd_entry_button(self,widget):
         minphd = self.entry.get_text()
         maxphd = self.entry2.get_text()
-        print minphd, maxphd
+        phdfilt = [minphd,maxphd]
+        self.phd_window.destroy()
+        self.filter_phd(phdfilt)
+        
     	
 
 
