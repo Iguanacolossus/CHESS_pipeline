@@ -257,12 +257,16 @@ class MyWindow(Gtk.Window):
         fit = gauss(xgauss, *coeff)
         sigma = coeff[2]
         FWHM = sigma*2*np.sqrt(2*np.log(2))
- 	fitplot = plt.plot(xgauss,ygauss,xgauss,fit+bg_fit)
+        FWHM = round(FWHM,2)
+ 	fitplot = plt.plot(xgauss,ygauss,color='k')
+ 	plt.plot(xgauss,fit+bg_fit,color = 'b',linewidth = 1.5)
  	xpos = xgauss[0]+.01*(coeff[1]-xgauss[0])
  	strFWHM = str(FWHM)
  	plt.text(xpos,.9*max(ygauss),'FWHM = '+strFWHM+'',color = 'purple',fontweight = 'bold')
- 	
- 	plt.plot(xgauss,bg_fit)
+ 	 
+ 	center = str(round(coeff[1],2))
+ 	plt.text(xpos,.95*max(ygauss),'Center = '+center+'',color = 'green',fontweight = 'bold')
+ 	plt.plot(xgauss,bg_fit,'r--')
  	
  	plt.show()
  	self.xdata = []
@@ -313,7 +317,7 @@ class MyWindow(Gtk.Window):
     	
 ### plotting subpots in main gui ###
     def update_plot(self, scidata):
-        self.plt= self.a.imshow(scidata, vmin = 0, vmax = 255)
+        self.plt= self.a.imshow(scidata, vmin = 0, vmax = 255,origin = 'lower')
         cbar=self.f.colorbar(self.plt,shrink=.84,pad=0.01)
         #cbar.self.a.tick_params(labelsize=5) 
         
