@@ -227,6 +227,24 @@ class MyWindow(Gtk.Window):
         xg2 = max(xg)       
         xgauss = x[xg1:xg2]
         ygauss = self.odo[xg1:xg2]
+        right = ygauss[len(xgauss)-4:len(xgauss)]
+        left = ygauss[0:4]
+       
+       # background subtraction
+        averight = sum(right)/len(right)
+        aveleft = sum(left)/len(left)
+        bg_y = [averight,aveleft]
+        rightx = xgauss[len(xgauss)-4:len(xgauss)]
+        leftx = xgauss[0:4]
+        averightx = sum(rightx)/len(rightx)
+        aveleftx = sum(leftx)/len(leftx)
+        bg_x = [averightx,aveleftx]
+       
+        m,b = np.polyfit(bg_x,bg_y,1)
+        slopex = [i * m for i in xgauss]
+        bg_fit = slopex+b
+        
+        
         
        # makeing a model gauss
         def gauss(xgauss,MAX,mu,sigma):
@@ -234,16 +252,19 @@ class MyWindow(Gtk.Window):
         avex = sum(xgauss)/len(xgauss) 
         guess = [1.,avex,1.]
        # plugging in model to matplotlibs curve_fit()
-        coeff, var_matrix = curve_fit(gauss,xgauss,ygauss,p0=guess) 
+       
+        coeff, var_matrix = curve_fit(gauss,xgauss,ygauss-bg_fit,p0=guess) 
         fit = gauss(xgauss, *coeff)
         sigma = coeff[2]
         FWHM = sigma*2*np.sqrt(2*np.log(2))
- 	fitplot = plt.plot(xgauss,ygauss,xgauss,fit)
+ 	fitplot = plt.plot(xgauss,ygauss,xgauss,fit+bg_fit)
  	xpos = xgauss[0]+.01*(coeff[1]-xgauss[0])
  	strFWHM = str(FWHM)
  	plt.text(xpos,.9*max(ygauss),'FWHM = '+strFWHM+'',color = 'purple',fontweight = 'bold')
  	
- 	plt.show(fitplot)
+ 	plt.plot(xgauss,bg_fit)
+ 	
+ 	plt.show()
  	self.xdata = []
  	
  ### count rate #####
