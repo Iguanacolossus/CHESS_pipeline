@@ -161,8 +161,8 @@ class MyWindow(Gtk.Window):
  
 	
     #drawing box around my chunk to check makesure I have a good portion
-	#plt.hlines(chunk,[-1000],[5000],color='r')
-        #plt.vlines([-1000,5000],minv,maxv,color='r')
+	#plt.hself.lines(chunk,[-1000],[5000],color='r')
+        #plt.vself.lines([-1000,5000],minv,maxv,color='r')
 	#plt.show()
     
     #cutting out the chunk of data that i selected
@@ -181,11 +181,12 @@ class MyWindow(Gtk.Window):
     # using scipy.signal.find_peaks_cwt() to find centers of orders.  this required scipy version .11.0 or greater
     	peakind=signal.find_peaks_cwt(ychunk,np.arange(3,15))
     
-    # plotting chunk of 1D data with lines through the centers of the orders to double check how the peak finder did
+    # plotting chunk of 1D data with self.lines through the centers of the orders to double check how the peak finder did
 
-    	lines=xchunk[peakind]
-    	revlines=lines[::-1]
-    	self.update_ordersplot(ychunk,xchunk,lines)
+    	self.lines=xchunk[peakind]
+    	revlines=self.lines[::-1]
+    	lines = self.lines
+    	self.update_ordersplot(ychunk,xchunk,self.lines)
     
     
     ### extraction of orders ###
@@ -369,7 +370,7 @@ class MyWindow(Gtk.Window):
         
     def update_ordersplot(self,ychunk,xchunk,lines):
         self.plt=self.e.plot(ychunk,xchunk)
-        self.e.hlines(lines,0,2000,color='purple',label='centers')
+        self.e.hlines(self.lines,0,2000,color='purple',label='centers')
         self.canvas.draw()      
       
   
@@ -392,10 +393,25 @@ class MyWindow(Gtk.Window):
    #  mouse click event on 1d	
     	 cid = self.canvas.mpl_connect('button_press_event', onclick)
     	 
-   ### remove orders ###
+   ### mouse click on remove orders ###
     def orderbutton_clicked(self, widget, data):
     	self.statusbar.push(data,'click on the order that you want to exclude.')
-   
+   	
+   	self.remove = []
+   	lines = self.lines
+   	def onclick_order(event):
+   		self.remove.append(event.ydata)
+   		remove = self.remove
+   		self.remove_orders(remove,lines)
+   	cid4 = self.canvas.mpl_connect('button_press_event',onclick_order)
+   ### removing orders
+    def remove_orders(self,remove,lines):
+    	bad_orders = min(lines, key=lambda x:abs(x-remove))
+    	
+    	print remove
+    	print bad_orders
+    	print lines
+    	
    
    ### count rate button  
     def on_button1_clicked(self, widget,data):
