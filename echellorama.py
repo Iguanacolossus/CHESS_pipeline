@@ -55,7 +55,25 @@ class MyWindow(Gtk.Window):
         self.c.tick_params(axis='both', labelsize=7)
         
         self.canvas = FigureCanvas(self.f) 
+   
+    # menue bar 
+        menubar = Gtk.MenuBar()
         
+        filem = Gtk.MenuItem("File")
+        
+        
+        filemenu = Gtk.Menu()
+        filem.set_submenu(filemenu)
+        
+        open = Gtk.MenuItem("open")
+        filemenu.append(open)
+        
+        menubar.append(filem)
+        
+        menubox = Gtk.Box( orientation = Gtk.Orientation.VERTICAL)
+        menubox.pack_start(menubar,False,False,0)
+             
+             
         
     # Navigtion toolbar stuff     
         
@@ -89,6 +107,7 @@ class MyWindow(Gtk.Window):
         main_box.pack_start(self.canvas, True, True, 0)
         main_box.pack_start(vbutton_box,False,False,0)
         main_box.pack_start(toolbar, False, False, 0)
+        main_box.pack_start(menubox,False,False,0)
         
         
         
