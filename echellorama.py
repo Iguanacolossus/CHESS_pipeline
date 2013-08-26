@@ -18,6 +18,7 @@ import math
 from scipy.optimize import curve_fit
 
 
+
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_gtk3cairo import FigureCanvasGTK3Cairo as FigureCanvas
 from matplotlib.backends.backend_gtk3 import NavigationToolbar2GTK3 as NavigationToolbar
@@ -68,13 +69,16 @@ class MyWindow(Gtk.Window):
         open = Gtk.MenuItem("open")
         filemenu.append(open)
         
+        savesub = Gtk.Menu()
+        #savesub.append()
+        
         menubar.append(filem)
         
         menubox = Gtk.Box( orientation = Gtk.Orientation.VERTICAL)
         menubox.pack_start(menubar,False,False,0)
-             
-             
-        
+        #open.connect("open", self.on_file_clicked)
+     
+    
     # Navigtion toolbar stuff     
         
         toolbar = NavigationToolbar(self.canvas, self)
@@ -91,14 +95,17 @@ class MyWindow(Gtk.Window):
         self.button1.connect("clicked", self.on_button1_clicked, context_id)
         self.button2 = Gtk.Button('Filter PHD')
         self.button2.connect("clicked",self.on_button2_clicked,context_id)
-        
         self.button3 = Gtk.Button(label='Fit 1D Gauss')
         self.button3.connect("clicked", self.on_button3_clicked,  context_id)
+        
+        self.orderbutton = Gtk.Button(label = 'Remove Order')
+        self.orderbutton.connect("clicked",self.orderbutton_clicked,context_id)
         
         
         vbutton_box.pack_start(self.button1,True,True, 0)
         vbutton_box.pack_start(self.button2,True, True, 0)
         vbutton_box.pack_start(self.button3,True, True, 0)
+        vbutton_box.pack_start(self.orderbutton,True,True,0)
         
      
         
@@ -232,7 +239,16 @@ class MyWindow(Gtk.Window):
 	self.update_PHDplot(PHD)
 	hdu.close()
 	
-	
+ ### file selector window ###
+    def on_file_clicked(self, widget):
+        dialog = Gtk.FileChooserDialog("Please choose a file", self,
+            Gtk.FileChooserAction.OPEN,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+
+        
+
+        response = dialog.run()
 	
  ### guass fitting ###
         self.xdata=[]
@@ -376,7 +392,11 @@ class MyWindow(Gtk.Window):
    #  mouse click event on 1d	
     	 cid = self.canvas.mpl_connect('button_press_event', onclick)
     	 
-
+   ### remove orders ###
+    def orderbutton_clicked(self, widget, data):
+    	print 'remove order'
+   
+   
    ### count rate button  
     def on_button1_clicked(self, widget,data):
     	self.statusbar.push(data,'Use zoom feature in navigation bar to select count rate region')
