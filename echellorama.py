@@ -406,11 +406,13 @@ class MyWindow(Gtk.Window):
    	cid4 = self.canvas.mpl_connect('button_press_event',onclick_order)
    ### removing orders
     def remove_orders(self,remove,lines):
-    	bad_orders = min(lines, key=lambda x:abs(x-remove))
-    	
-    	print remove
+    	bad_orders = []
+    	for i in range(0,len(remove)):
+    		
+    		bad = min(lines, key=lambda x:abs(x-remove[i]))
+    	        bad_orders.append(bad)
     	print bad_orders
-    	print lines
+        	 	
     	
    
    ### count rate button  
