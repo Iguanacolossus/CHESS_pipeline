@@ -407,11 +407,15 @@ class MyWindow(Gtk.Window):
    ### removing orders
     def remove_orders(self,remove,lines):
     	bad_orders = []
+    	
     	for i in range(0,len(remove)):
-    		
+    		# find order closest to the spot clicked
     		bad = min(lines, key=lambda x:abs(x-remove[i]))
     	        bad_orders.append(bad)
-    	print bad_orders
+    	        #newlines.remove(bad_orders)
+    	        #c = filter(lambda a: a != bad_orders[i],lines)
+    	newlines = filter(lambda lines: lines not in bad_orders,lines)
+    	print len(newlines)
         	 	
     	
    
