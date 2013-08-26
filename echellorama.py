@@ -394,7 +394,7 @@ class MyWindow(Gtk.Window):
     	 
    ### remove orders ###
     def orderbutton_clicked(self, widget, data):
-    	print 'remove order'
+    	self.statusbar.push(data,'click on the order that you want to exclude.')
    
    
    ### count rate button  
