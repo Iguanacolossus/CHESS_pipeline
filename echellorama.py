@@ -247,6 +247,14 @@ class MyWindow(Gtk.Window):
             Gtk.FileChooserAction.OPEN,
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+        filter = Gtk.FileFilter()
+        filter.set_name('fits Files')
+        filter.add_mime_type('fits')
+        filter.add_pattern('*.fits')
+        dialog.add_filter(filter)
+        
+        
+        
 
         
 
