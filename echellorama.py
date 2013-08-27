@@ -243,22 +243,25 @@ class MyWindow(Gtk.Window):
 	
  ### file selector window ###
     def on_file_clicked(self, widget):
-        dialog = Gtk.FileChooserDialog("Please choose a file", self,
+        dialog = Gtk.FileChooserDialog("Please Choose a File", self,
             Gtk.FileChooserAction.OPEN,
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+        dialog.set_default_response(Gtk.ResponseType.OK)
         filter = Gtk.FileFilter()
         filter.set_name('fits Files')
         filter.add_mime_type('fits')
         filter.add_pattern('*.fits')
         dialog.add_filter(filter)
-        
-        
-        
-
-        
-
+   
         response = dialog.run()
+        
+        if response == Gtk.ResponseType.OK :
+        	fname = dialog.get_filename()
+        	global _File
+        	_File = fname
+        	#textbuffer = TextBox.get_buffer()
+        	print "open file" + fname
 	
  ### guass fitting ###
         self.xdata=[]
