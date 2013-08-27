@@ -32,12 +32,13 @@ from matplotlib.backends.backend_gtk3 import NavigationToolbar2GTK3 as Navigatio
 class MyWindow(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self,title="Echelle Reduction GUI")
-  
+      
+        
    ## setting up canvase for plotting ### 
    
         #self.box = Gtk.EventBox()
         
-       
+        
         self.set_default_size(1000,700)
     	self.f = Figure(figsize=(5,7), dpi=100)
         self.b = self.f.add_subplot(212) # 1D
@@ -56,6 +57,7 @@ class MyWindow(Gtk.Window):
         self.c.tick_params(axis='both', labelsize=7)
         
         self.canvas = FigureCanvas(self.f) 
+        
    
     # menue bar 
         menubar = Gtk.MenuBar()
@@ -260,8 +262,12 @@ class MyWindow(Gtk.Window):
         	fname = dialog.get_filename()
         	global _File
         	_File = fname
-        	#textbuffer = TextBox.get_buffer()
         	print "open file" + fname
+        	self.statusbar.push(0,'Opened File:' + fname)
+        	dialog.destroy()
+        elif response == Gtk.ResponseType.CANCEL:
+        	dialog.destroy()
+        	
 	
  ### guass fitting ###
         self.xdata=[]
