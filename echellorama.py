@@ -65,6 +65,7 @@ class MyWindow(Gtk.Window):
         filem.set_submenu(filemenu)
         
         open = Gtk.MenuItem("open")
+        open.connect('activate',self.on_file_clicked)
         filemenu.append(open)
         menubar.append(filem)
         #savesub = Gtk.Menu()
