@@ -61,18 +61,18 @@ class MyWindow(Gtk.Window):
         menubar = Gtk.MenuBar()
         
         filem = Gtk.MenuItem("File")
-        
-        
         filemenu = Gtk.Menu()
         filem.set_submenu(filemenu)
         
         open = Gtk.MenuItem("open")
         filemenu.append(open)
-        
-        savesub = Gtk.Menu()
-        #savesub.append()
-        
         menubar.append(filem)
+        #savesub = Gtk.Menu()
+        #savesub.append()
+        exit = Gtk.MenuItem('Exit')
+        exit.connect('activate',Gtk.main_quit)
+        filemenu.append(exit)
+       
         
         menubox = Gtk.Box( orientation = Gtk.Orientation.VERTICAL)
         menubox.pack_start(menubar,False,False,0)
