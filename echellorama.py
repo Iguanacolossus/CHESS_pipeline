@@ -90,7 +90,8 @@ class MyWindow(Gtk.Window):
      
     # status bar
         self.statusbar = Gtk.Statusbar()
-        context_id=self.statusbar.get_context_id("stat bar example")    
+        context_id=self.statusbar.get_context_id("stat bar example")  
+        self.statusbar.push(0,'Please Open 2D Fits Data File')  
         
     # button box
         vbutton_box = Gtk.Box(orientation = Gtk.Orientation.HORIZONTAL)
@@ -119,30 +120,55 @@ class MyWindow(Gtk.Window):
         main_box.pack_start(toolbar, False, False, 0)
         main_box.pack_start(menubox,False,False,0)
         
-        
-        
-    # passing in filename or sends error
-    	if (len(sys.argv) < 2):
-        	raise Exception("Need to pass file name")
-    
-    # reads in the file name
-    	filename = sys.argv[1]
-
-    #this opens up the fits file
-    	hdulist = fits.open(filename)
-        targname = hdulist[0].header['targname']    
-    
-    #this picks out the actual data from fits file, and turns it into numpy array
-    	scidata = hdulist['sci',2].data 
-    	hdulist.close()
-    
-    # sends 2d data to my gui plotting funtion	
-    	self.update_plot(scidata)
-        self.scidata = scidata
+	
+# ### file selector window ###
+    def on_file_clicked(self, widget):
+        dialog = Gtk.FileChooserDialog("Please Choose a File", self,
+            Gtk.FileChooserAction.OPEN,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+        dialog.set_default_response(Gtk.ResponseType.OK)
+        filter = Gtk.FileFilter()
+        filter.set_name('fits Files')
+        filter.add_mime_type('fits')
+        filter.add_pattern('*.fits')
+        dialog.add_filter(filter)
    
-    ##### smashing 2D data into 1D to view orders as peaks ####
+        response = dialog.run()
+        
+        if response == Gtk.ResponseType.OK :
+        	fname = dialog.get_filename()
+        	global _File
+        	_File = fname
+        	#print "open file" + fname
+        	self.statusbar.push(0,'Opened File:' + fname)
+        	dialog.destroy()
+        	self.open_file(_File)
+        elif response == Gtk.ResponseType.CANCEL:
+        	dialog.destroy()
+   
+   # opening fits file
+    def open_file(self,_File):
+    	#this opens up the fits file
+    	hdulist = fits.open(_File)
+        self.targname = hdulist[0].header['targname']    
+    
+        #this picks out the actual data from fits file, and turns it into numpy array
+    	self.scidata = hdulist['sci',2].data 
+    	hdulist.close()
+    	scidata = self.scidata
+    	targname = self.targname
+    	self.science(scidata,targname)
     	
     
+    def science(self,scidata,targname):
+    	# sends 2d data to my gui plotting funtion	
+    	self.update_plot(scidata)
+        #self.scidata = scidata
+        
+        
+    ### smashing 2D data into 1D to view orders as peaks ####
+    	
     # filling in y with the sums of the rows of scidata
         y=[]
    	for i in range(0,len(scidata[0])):
@@ -190,10 +216,8 @@ class MyWindow(Gtk.Window):
     	revlines=self.lines[::-1]
     	lines = self.lines
     	self.update_ordersplot(ychunk,xchunk,self.lines)
-    
-    
+    	
     ### extraction of orders ###
-    
     
     # find w, the widths of the orders (difference between peaks)
 
@@ -230,47 +254,55 @@ class MyWindow(Gtk.Window):
     	self.x = np.linspace(0,len(scidata[0]), num = len(scidata[0]))
         self.odo=oneDorders['order16']
         odo = self.odo[:]
-    	self.update_1dplot(odo,x)
-
+    	self.update_1dplot(odo,x)  
     	
-
-   
-
-### fake PDH stuff ### (fake data for now)
+    ### fake PDH stuff ### (fake data for now)
 	PHDfake = '/home/rachel/codes/chesstest.fits'
 	hdu = fits.open(PHDfake)
 	PHD = hdu[1].data['PHD']
 	self.update_PHDplot(PHD)
-	hdu.close()
+	hdu.close() 
 	
- ### file selector window ###
-    def on_file_clicked(self, widget):
-        dialog = Gtk.FileChooserDialog("Please Choose a File", self,
-            Gtk.FileChooserAction.OPEN,
-            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-             Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
-        dialog.set_default_response(Gtk.ResponseType.OK)
-        filter = Gtk.FileFilter()
-        filter.set_name('fits Files')
-        filter.add_mime_type('fits')
-        filter.add_pattern('*.fits')
-        dialog.add_filter(filter)
-   
-        response = dialog.run()
+	self.dragbox=[] 	
         
-        if response == Gtk.ResponseType.OK :
-        	fname = dialog.get_filename()
-        	global _File
-        	_File = fname
-        	print "open file" + fname
-        	self.statusbar.push(0,'Opened File:' + fname)
-        	dialog.destroy()
-        elif response == Gtk.ResponseType.CANCEL:
-        	dialog.destroy()
-        	
-	
+    def update_plot(self, scidata):
+        self.plt= self.a.imshow(scidata, vmin = 0, vmax = 255,origin = 'lower')
+        cbar=self.f.colorbar(self.plt,shrink=.84,pad=0.01) 
+        self.canvas.draw()
+
+    def update_ordersplot(self,ychunk,xchunk,lines):
+        self.plt=self.e.plot(ychunk,xchunk)
+        self.e.hlines(self.lines,0,2000,color='purple',label='centers')
+        self.canvas.draw()
+
+    def update_1dplot(self,odo,x):
+    	self.plt=self.b.plot(x,self.odo)
+    	self.canvas.draw()
+    	
+    def update_PHDplot(self,PHD):
+        self.plt=self.c.hist(PHD,bins=80,histtype='stepfilled')
+        self.canvas.draw()
+        
+  ## gauss fitting button 
+    
+    def on_button3_clicked(self, widget, data):
+         self.statusbar.push(data,'Ready to fit.  Click on both sides of the emission feature you wish to fit')
+         self.xdata = []
+         
+    	 def onclick(event):
+    	         #self.xdata = []
+    	         self.xdata.append(event.xdata)
+    	         self.statusbar.push(data,'one more click...')
+        	 if len(self.xdata) == 2:
+        	        self.statusbar.push(data,'Ready to fit.  Click on both sides of the emission feature you wish to fit')
+        	 	xdata=self.xdata
+    	                self.gauss_fit(xdata)
+        #  mouse click event on 1d	
+    	 cid = self.canvas.mpl_connect('button_press_event', onclick)
+    
+    		
  ### guass fitting ###
-        self.xdata=[]
+        #self.xdata=[]
     def gauss_fit(self,xdata):
         
         x = list(self.x)
@@ -325,119 +357,8 @@ class MyWindow(Gtk.Window):
  	plt.show()
  	self.xdata = []
  	
- ### count rate #####
-        self.dragbox=[]
-    def cnt_rate(self,dragbox,data):
-        # fake exposure time in seconds
-        datafake = '/home/rachel/codes/chesstest.fits'
-	hdu = fits.open(datafake)
-	exptime = hdu[0].header['EXPOSURE']
-    	
-    	dragbox = [int(x) for x in dragbox]
-    	cntbox = self.scidata[dragbox[1]:dragbox[3],dragbox[0]:dragbox[2]]
-    	totpix = np.size(cntbox)
-    	cntrate = np.sum(cntbox)/exptime
-    	totpix = str(totpix)
-    	cntrate = str(cntrate)
-    	self.statusbar.push(data,'count rate in box = '+cntrate+' cnt/sec,    pixels in box = '+totpix+'')
-    	self.dragbox = []
-    	
-    ### phd filter function 33
-    def filter_phd(self, phdfilt):
-        phdfilt = [int(x) for x in phdfilt]
-        
-    	
-    	fakedata = '/home/rachel/codes/chesstest.fits'
-	hdu = fits.open(fakedata)
-	PHD = hdu[1].data['PHD']
-	PHD = np.array(PHD)
-	data  = hdu[1].data
-	newdata = data[(PHD > phdfilt[0]) & (PHD < phdfilt[1])]
-	
-	
-	plt.subplot(221)
-	oldplot = plt.plot(data['X'],data['Y'],linestyle = '',marker = '.')
-	
-	plt.subplot(222)
-	newplot = plt.plot(newdata['X'],newdata['Y'],linestyle = '',marker = '.')
-	
-	plt.show()
-    	
-       
-        
-        
-   
-
-    	
-### plotting subpots in main gui ###
-    def update_plot(self, scidata):
-        self.plt= self.a.imshow(scidata, vmin = 0, vmax = 255,origin = 'lower')
-        cbar=self.f.colorbar(self.plt,shrink=.84,pad=0.01)
-        #cbar.self.a.tick_params(labelsize=5) 
-        
-        self.canvas.draw()
-        
-    def update_1dplot(self,odo,x):
-    	self.plt=self.b.plot(x,self.odo)
-    	
-        self.canvas.draw()
-        
-    def update_PHDplot(self,PHD):
-        self.plt=self.c.hist(PHD,bins=80,histtype='stepfilled')
-        self.canvas.draw()
-        
-    def update_ordersplot(self,ychunk,xchunk,lines):
-        self.plt=self.e.plot(ychunk,xchunk)
-        self.e.hlines(self.lines,0,2000,color='purple',label='centers')
-        self.canvas.draw()      
-      
-  
-  ## gauss fitting button 
-    
-    def on_button3_clicked(self, widget, data):
-         self.statusbar.push(data,'Ready to fit.  Click on both sides of the emission feature you wish to fit')
-         self.xdata = []
-         
-    	 def onclick(event):
-    	         
-    	         self.xdata.append(event.xdata)
-    	         self.statusbar.push(data,'one more click...')
-        	 if len(self.xdata) == 2:
-        	        self.statusbar.push(data,'Ready to fit.  Click on both sides of the emission feature you wish to fit')
-        	 	xdata=self.xdata
-    	                self.gauss_fit(xdata)
-    	                
-              
-   #  mouse click event on 1d	
-    	 cid = self.canvas.mpl_connect('button_press_event', onclick)
-    	 
-   ### mouse click on remove orders ###
-    def orderbutton_clicked(self, widget, data):
-    	self.statusbar.push(data,'click on the order that you want to exclude.')
-   	
-   	self.remove = []
-   	lines = self.lines
-   	def onclick_order(event):
-   		self.remove.append(event.ydata)
-   		remove = self.remove
-   		self.remove_orders(remove,lines)
-   	cid4 = self.canvas.mpl_connect('button_press_event',onclick_order)
-   ### removing orders
-    def remove_orders(self,remove,lines):
-    	bad_orders = []
-    	
-    	for i in range(0,len(remove)):
-    		# find order closest to the spot clicked
-    		bad = min(lines, key=lambda x:abs(x-remove[i]))
-    	        bad_orders.append(bad)
-    	        #newlines.remove(bad_orders)
-    	        #c = filter(lambda a: a != bad_orders[i],lines)
-    	newlines = filter(lambda lines: lines not in bad_orders,lines)
-    	print len(newlines)
-        	 	
-    	
-   
-   ### count rate button  
+ 	
+    ### count rate button  
     def on_button1_clicked(self, widget,data):
     	self.statusbar.push(data,'Use zoom feature in navigation bar to select count rate region')
     	
@@ -449,13 +370,14 @@ class MyWindow(Gtk.Window):
         #context_id=statusbar.get_context_id("stat bar example") 
         #main_box2.pack_start(statusbar, False,False,0)    
     	#plt.show()
-    	self.dragbox=[]
+    	
     	
     	
     	def onclick2(event):
                   #print event.xdata, event.ydata
                   self.dragbox.append(event.xdata)
                   self.dragbox.append(event.ydata)
+                  
                   
         def offclick2(event):
                  # print event.xdata, event.ydata
@@ -464,11 +386,28 @@ class MyWindow(Gtk.Window):
                   self.dragbox.append(event.ydata)
                   dragbox = self.dragbox
                   self.cnt_rate(dragbox,data)
-                  
+                 
                   
         cid2 = self.canvas.mpl_connect('button_press_event',onclick2 )
         cid3 = self.canvas.mpl_connect('button_release_event',offclick2 )
+
+ 	
+ ### count rate #####
         
+    def cnt_rate(self,dragbox,data):
+        # fake exposure time in seconds
+        datafake = '/home/rachel/codes/chesstest.fits'
+	hdu = fits.open(datafake)
+	exptime = hdu[0].header['EXPOSURE']
+    	dragbox = [int(x) for x in dragbox]
+    	cntbox = self.scidata[dragbox[0]:dragbox[2],1024-dragbox[1]:1024-dragbox[3]]
+    	totpix = np.size(cntbox)
+    	cntrate = np.sum(cntbox)/exptime
+    	totpix = str(totpix)
+    	cntrate = str(cntrate)
+    	self.statusbar.push(data,'count rate in box = '+cntrate+' cnt/sec,    pixels in box = '+totpix+'')
+    	#self.dragbox = []
+    	
     #### phd filter button ##
     
     def on_button2_clicked(self,widget,data):
@@ -514,14 +453,61 @@ class MyWindow(Gtk.Window):
         mainbox.show()
         thebox.show()
         self.phd_window.show()
-    
+        
     def phd_entry_button(self,widget):
         minphd = self.entry.get_text()
         maxphd = self.entry2.get_text()
         phdfilt = [minphd,maxphd]
         self.phd_window.destroy()
         self.filter_phd(phdfilt)
+#    	
+    ### phd filter function 33
+    def filter_phd(self, phdfilt):
+        phdfilt = [int(x) for x in phdfilt]
         
+    	
+    	fakedata = '/home/rachel/codes/chesstest.fits'
+	hdu = fits.open(fakedata)
+	PHD = hdu[1].data['PHD']
+	PHD = np.array(PHD)
+	data  = hdu[1].data
+	newdata = data[(PHD > phdfilt[0]) & (PHD < phdfilt[1])]
+	
+	
+	plt.subplot(221)
+	oldplot = plt.plot(data['X'],data['Y'],linestyle = '',marker = '.')
+	
+	plt.subplot(222)
+	newplot = plt.plot(newdata['X'],newdata['Y'],linestyle = '',marker = '.')
+	
+	plt.show()
+    	
+
+    	 
+   ### mouse click on remove orders ###
+    def orderbutton_clicked(self, widget, data):
+    	self.statusbar.push(data,'click on the order that you want to exclude.')
+   	
+   	self.remove = []
+   	lines = self.lines
+   	def onclick_order(event):
+   		self.remove.append(event.ydata)
+   		remove = self.remove
+   		self.remove_orders(remove,lines)
+   	cid4 = self.canvas.mpl_connect('button_press_event',onclick_order)
+   ### removing orders
+    def remove_orders(self,remove,lines):
+    	bad_orders = []
+    	
+    	for i in range(0,len(remove)):
+    		# find order closest to the spot clicked
+    		bad = min(lines, key=lambda x:abs(x-remove[i]))
+    	        bad_orders.append(bad)
+    	        #newlines.remove(bad_orders)
+    	        #c = filter(lambda a: a != bad_orders[i],lines)
+    	newlines = filter(lambda lines: lines not in bad_orders,lines)
+    	print len(newlines)
+      
     	
 
 
@@ -531,4 +517,5 @@ if __name__ == '__main__':
     win.connect("delete-event", Gtk.main_quit)
     win.show_all()
     Gtk.main()
+
 
