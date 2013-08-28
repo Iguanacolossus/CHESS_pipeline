@@ -215,6 +215,8 @@ class MyWindow(Gtk.Window):
     	self.lines=xchunk[peakind]
     	revlines=self.lines[::-1]
     	lines = self.lines
+    	self.xchunk = xchunk
+    	self.ychunk = ychunk
     	self.update_ordersplot(ychunk,xchunk,self.lines)
     	
     ### extraction of orders ###
@@ -271,8 +273,9 @@ class MyWindow(Gtk.Window):
         self.canvas.draw()
 
     def update_ordersplot(self,ychunk,xchunk,lines):
+        self.e.set_title("orders")
         self.plt=self.e.plot(ychunk,xchunk)
-        self.e.hlines(self.lines,0,2000,color='purple',label='centers')
+        self.e.hlines(lines,0,2000,color='purple',label='centers')
         self.canvas.draw()
 
     def update_1dplot(self,odo,x):
@@ -506,7 +509,11 @@ class MyWindow(Gtk.Window):
     	        #newlines.remove(bad_orders)
     	        #c = filter(lambda a: a != bad_orders[i],lines)
     	newlines = filter(lambda lines: lines not in bad_orders,lines)
-    	print len(newlines)
+    	xchunk = self.xchunk
+    	ychunk = self.ychunk
+    	self.e.cla()
+    	lines = newlines
+    	self.update_ordersplot(ychunk,xchunk,lines)
       
     	
 
