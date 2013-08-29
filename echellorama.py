@@ -177,6 +177,7 @@ class MyWindow(Gtk.Window):
         
     # making an x axis with same dementions as y
     	x = np.linspace(0,len(scidata[0]), num = len(scidata[0]))
+    	self.x = x
 
     #reversing x for the sake of the visualization
     	xrev = x[::-1]
@@ -218,11 +219,20 @@ class MyWindow(Gtk.Window):
     	self.xchunk = xchunk
     	self.ychunk = ychunk
     	self.update_ordersplot(ychunk,xchunk,self.lines)
+   
+      
     	
-    ### extraction of orders ###
-    
-    # find w, the widths of the orders (difference between peaks)
-
+    ### fake PDH stuff ### (fake data for now)
+	PHDfake = '/home/rachel/codes/chesstest.fits'
+	hdu = fits.open(PHDfake)
+	PHD = hdu[1].data['PHD']
+	self.update_PHDplot(PHD)
+	hdu.close() 
+	
+	self.dragbox=[]
+   
+      ### extraction of orders ###   
+     # find w, the widths of the orders (difference between peaks)
     	w=[]
     	for i in range(1,len(peakind)):
     		t=peakind[i]-peakind[i-1]
@@ -231,17 +241,18 @@ class MyWindow(Gtk.Window):
     # i have to add an extra w at the end of the array to make it the right size i (hopefully this is kosher)
     	maxw=max(w)-4
     	w.append(maxw)
-    
+        self.w = w
     
     ### making arrays of 1s ans 0s and extracting the 1d orders by matrix multiplication 
+    #def extraction(self, peakind,x,scidata):
    	zeros=np.zeros((len(x),1))
-    	index = range(0,len(w))
+    	index = range(0,len(self.w))
     	reindex = index[::-1]
-    
+        global oneDorders
     	oneDorders = {}
     	for i in reindex:
     		zeros1=np.copy(zeros)
-    		zeros1[ 1024 - (np.sum(w[(i):18])) : 1024 - np.sum(w[(i+1):18]) ] = 1
+    		zeros1[ len(scidata[0]) - (np.sum(w[(i):18])) : len(scidata[0]) - np.sum(w[(i+1):18]) ] = 1
     		twoD = scidata*zeros1
     			   		
             # making 2d orders in to 1d orders
@@ -256,16 +267,8 @@ class MyWindow(Gtk.Window):
     	self.x = np.linspace(0,len(scidata[0]), num = len(scidata[0]))
         self.odo=oneDorders['order16']
         odo = self.odo[:]
-    	self.update_1dplot(odo,x)  
-    	
-    ### fake PDH stuff ### (fake data for now)
-	PHDfake = '/home/rachel/codes/chesstest.fits'
-	hdu = fits.open(PHDfake)
-	PHD = hdu[1].data['PHD']
-	self.update_PHDplot(PHD)
-	hdu.close() 
-	
-	self.dragbox=[] 	
+    	self.update_1dplot(odo,x)
+    		
         
     def update_plot(self, scidata):
         self.plt= self.a.imshow(scidata, vmin = 0, vmax = 255,origin = 'lower')
@@ -279,6 +282,7 @@ class MyWindow(Gtk.Window):
         self.canvas.draw()
 
     def update_1dplot(self,odo,x):
+        
     	self.plt=self.b.plot(x,self.odo)
     	self.canvas.draw()
     	
@@ -293,7 +297,6 @@ class MyWindow(Gtk.Window):
          self.xdata = []
          
     	 def onclick(event):
-    	         #self.xdata = []
     	         self.xdata.append(event.xdata)
     	         self.statusbar.push(data,'one more click...')
         	 if len(self.xdata) == 2:
@@ -305,7 +308,6 @@ class MyWindow(Gtk.Window):
     
     		
  ### guass fitting ###
-        #self.xdata=[]
     def gauss_fit(self,xdata):
         
         x = list(self.x)
@@ -365,16 +367,6 @@ class MyWindow(Gtk.Window):
     def on_button1_clicked(self, widget,data):
     	self.statusbar.push(data,'Use zoom feature in navigation bar to select count rate region')
     	
-    	#scidata = self.scidata
-    	#m=plt.imshow(scidata,vmin = 0, vmax = 255, aspect = 'auto') 	
-    	#ain_box2 = Gtk.Box( orientation = Gtk.Orientation.VERTICAL)  
-        #im.add(main_box2)
-        #statusbar = Gtk.Statusbar()
-        #context_id=statusbar.get_context_id("stat bar example") 
-        #main_box2.pack_start(statusbar, False,False,0)    
-    	#plt.show()
-    	
-    	
     	
     	def onclick2(event):
                   #print event.xdata, event.ydata
@@ -409,7 +401,6 @@ class MyWindow(Gtk.Window):
     	totpix = str(totpix)
     	cntrate = str(cntrate)
     	self.statusbar.push(data,'count rate in box = '+cntrate+' cnt/sec,    pixels in box = '+totpix+'')
-    	#self.dragbox = []
     	
     #### phd filter button ##
     
@@ -497,23 +488,38 @@ class MyWindow(Gtk.Window):
    		self.remove.append(event.ydata)
    		remove = self.remove
    		self.remove_orders(remove,lines)
+   		
    	cid4 = self.canvas.mpl_connect('button_press_event',onclick_order)
    ### removing orders
     def remove_orders(self,remove,lines):
     	bad_orders = []
+    	bad_orders_index = []
     	
     	for i in range(0,len(remove)):
-    		# find order closest to the spot clicked
     		bad = min(lines, key=lambda x:abs(x-remove[i]))
     	        bad_orders.append(bad)
-    	        #newlines.remove(bad_orders)
-    	        #c = filter(lambda a: a != bad_orders[i],lines)
+    	        bad_orders_index.append( np.where(lines == bad) )
+
+    	      
     	newlines = filter(lambda lines: lines not in bad_orders,lines)
     	xchunk = self.xchunk
     	ychunk = self.ychunk
     	self.e.cla()
     	lines = newlines
     	self.update_ordersplot(ychunk,xchunk,lines)
+        self.new_dictionary(bad_orders_index)
+
+    def new_dictionary(self,bad_orders_index):
+                print 'number or origonal orders',len(oneDorders)
+        	
+        	for i in range(0,len(bad_orders_index)):
+        		num = int(bad_orders_index[i][0])
+        		if oneDorders.get('order'+str(num),None):
+        			oneDorders.pop('order'+str(num))
+        	print 'corrected number of orders',len(oneDorders)
+        		
+    	        
+    	
       
     	
 
