@@ -16,6 +16,8 @@ from scipy import signal
 from gi.repository import Gtk, GObject, Gdk
 import math
 from scipy.optimize import curve_fit
+import pickle
+import datetime
 
 
 
@@ -66,7 +68,7 @@ class MyWindow(Gtk.Window):
         filemenu = Gtk.Menu()
         filem.set_submenu(filemenu)
         
-        open = Gtk.MenuItem("open")
+        open = Gtk.MenuItem("Open")
         open.connect('activate',self.on_file_clicked)
         filemenu.append(open)
         menubar.append(filem)
@@ -262,12 +264,14 @@ class MyWindow(Gtk.Window):
         		Y.append(t)
             # placing 1d orders in dictionary called oneDorders
         	oneDorders['order'+str(i)]=Y
+        
         	
      # sending plotting info to update_1dplot for gui (for now using just on order until cross coralation is added to script
     	self.x = np.linspace(0,len(scidata[0]), num = len(scidata[0]))
         self.odo=oneDorders['order16']
         odo = self.odo[:]
     	self.update_1dplot(odo,x)
+    	self.save_pickle(oneDorders)
     		
         
     def update_plot(self, scidata):
@@ -517,8 +521,13 @@ class MyWindow(Gtk.Window):
         		if oneDorders.get('order'+str(num),None):
         			oneDorders.pop('order'+str(num))
         	print 'corrected number of orders',len(oneDorders)
-        		
-    	        
+        	self.save_pickle(oneDorders)
+    def save_pickle(self, ondDorders):
+    	order_dict = oneDorders
+        now = datetime.datetime.now()
+        date = now.strftime("%m_%d_%Y")	
+        targname = str(self.targname)
+    	pickle.dump(order_dict,open(''+targname+'_1D_'+date+'.py','wb'))       
     	
       
     	
