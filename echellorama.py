@@ -389,6 +389,7 @@ class MyWindow(Gtk.Window):
                   
         cid2 = self.canvas.mpl_connect('button_press_event',onclick2 )
         cid3 = self.canvas.mpl_connect('button_release_event',offclick2 )
+       
 
  	
  ### count rate #####
@@ -405,7 +406,7 @@ class MyWindow(Gtk.Window):
     	totpix = str(totpix)
     	cntrate = str(cntrate)
     	self.statusbar.push(data,'count rate in box = '+cntrate+' cnt/sec,    pixels in box = '+totpix+'')
-    	
+    	return cntrate
     #### phd filter button ##
     
     def on_button2_clicked(self,widget,data):
@@ -527,7 +528,7 @@ class MyWindow(Gtk.Window):
         now = datetime.datetime.now()
         date = now.strftime("%m_%d_%Y")	
         targname = str(self.targname)
-    	pickle.dump(order_dict,open(''+targname+'_1D_'+date+'.py','wb'))       
+    	pickle.dump(order_dict,open(''+targname+'_1D_'+date+'.p','wb'))       
     	
       
     	
