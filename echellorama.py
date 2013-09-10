@@ -101,8 +101,10 @@ class MyWindow(Gtk.Window):
         self.button1.connect("clicked", self.on_button1_clicked, context_id)
         self.button2 = Gtk.Button('Filter PHD')
         self.button2.connect("clicked",self.on_button2_clicked,context_id)
-        self.button3 = Gtk.Button(label='Fit 1D Gauss')
-        self.button3.connect("clicked", self.on_button3_clicked,  context_id)
+        self.button3 = Gtk.ToggleButton(label='Fit 1D Gauss')
+        self.button3.set_active(False)
+        #self.button3.connect("toggled", self.toggled, "1")
+        self.button3.connect("toggled", self.on_button3_clicked,  context_id)
         
         self.orderbutton = Gtk.Button(label = 'Remove Order')
         self.orderbutton.connect("clicked",self.orderbutton_clicked,context_id)
@@ -121,8 +123,12 @@ class MyWindow(Gtk.Window):
         main_box.pack_start(vbutton_box,False,False,0)
         main_box.pack_start(toolbar, False, False, 0)
         main_box.pack_start(menubox,False,False,0)
-        
-	
+
+## toggle button stuff 
+   # def toggled(self, widget, button):
+        #print "ToggleButton", button, "was turned %s" % ("off", "on")[widget.get_active()]
+	#print ("off", "on")[widget.get_active()]
+	#print [widget.get_active()]
 # ### file selector window ###
     def on_file_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Please Choose a File", self,
@@ -297,6 +303,7 @@ class MyWindow(Gtk.Window):
   ## gauss fitting button 
     
     def on_button3_clicked(self, widget, data):
+         print [widget.get_active()]
          self.statusbar.push(data,'Ready to fit.  Click on both sides of the emission feature you wish to fit')
          self.xdata = []
          
