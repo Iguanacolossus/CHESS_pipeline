@@ -105,9 +105,9 @@ class MyWindow(Gtk.Window):
         self.button3.set_active(False)
         #self.button3.connect("toggled", self.toggled, "1")
         self.button3.connect("toggled", self.on_button3_clicked,  context_id)
-        
-        self.orderbutton = Gtk.Button(label = 'Remove Order')
-        self.orderbutton.connect("clicked",self.orderbutton_clicked,context_id)
+        self.orderbutton = Gtk.ToggleButton(label='Remove Orders')
+        #self.orderbutton = Gtk.Button(label = 'Remove Order')
+        self.orderbutton.connect("toggled",self.orderbutton_clicked,context_id)
         
         
         vbutton_box.pack_start(self.button1,True,True, 0)
@@ -124,11 +124,7 @@ class MyWindow(Gtk.Window):
         main_box.pack_start(toolbar, False, False, 0)
         main_box.pack_start(menubox,False,False,0)
 
-## toggle button stuff 
-   # def toggled(self, widget, button):
-        #print "ToggleButton", button, "was turned %s" % ("off", "on")[widget.get_active()]
-	#print ("off", "on")[widget.get_active()]
-	#print [widget.get_active()]
+
 # ### file selector window ###
     def on_file_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Please Choose a File", self,
@@ -303,8 +299,7 @@ class MyWindow(Gtk.Window):
   ## gauss fitting button 
     
     def on_button3_clicked(self, widget, data):
-         #if self.button3.get_active():
-         #if [widget.get_active()] == [True]:
+
          	self.statusbar.push(data,'Ready to fit.  Click on both sides of the emission feature you wish to fit')
          	self.xdata = []
                 def onclick(event):
@@ -503,11 +498,14 @@ class MyWindow(Gtk.Window):
    	self.remove = []
    	lines = self.lines
    	def onclick_order(event):
-   		self.remove.append(event.ydata)
-   		remove = self.remove
-   		self.remove_orders(remove,lines)
+   		if self.orderbutton.get_active():
+	   		self.remove.append(event.ydata)
+	   		remove = self.remove
+	   		self.remove_orders(remove,lines)
    		
    	cid4 = self.canvas.mpl_connect('button_press_event',onclick_order)
+   	if [self.orderbutton.get_active()] == [False]:
+    			self.statusbar.push(0,'Opened File:' + _File)
    ### removing orders
     def remove_orders(self,remove,lines):
     	bad_orders = []
