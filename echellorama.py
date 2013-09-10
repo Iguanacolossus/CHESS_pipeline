@@ -303,19 +303,25 @@ class MyWindow(Gtk.Window):
   ## gauss fitting button 
     
     def on_button3_clicked(self, widget, data):
-         print [widget.get_active()]
-         self.statusbar.push(data,'Ready to fit.  Click on both sides of the emission feature you wish to fit')
-         self.xdata = []
-         
-    	 def onclick(event):
-    	         self.xdata.append(event.xdata)
-    	         self.statusbar.push(data,'one more click...')
-        	 if len(self.xdata) == 2:
-        	        self.statusbar.push(data,'Ready to fit.  Click on both sides of the emission feature you wish to fit')
-        	 	xdata=self.xdata
-    	                self.gauss_fit(xdata)
+         #if self.button3.get_active():
+         #if [widget.get_active()] == [True]:
+         	self.statusbar.push(data,'Ready to fit.  Click on both sides of the emission feature you wish to fit')
+         	self.xdata = []
+                def onclick(event):
+                    if self.button3.get_active():
+    	        	 self.xdata.append(event.xdata)
+    	        	 self.statusbar.push(data,'one more click...')
+        		 if len(self.xdata) == 2:
+			        self.statusbar.push(data,'Ready to fit.  Click on both sides of the emission feature you wish to fit')
+			 	xdata=self.xdata
+	    	                self.gauss_fit(xdata)
+	    	    
+	    	    	
         #  mouse click event on 1d	
-    	 cid = self.canvas.mpl_connect('button_press_event', onclick)
+    		cid = self.canvas.mpl_connect('button_press_event', onclick)
+    		if [self.button3.get_active()] == [False]:
+    			self.statusbar.push(0,'Opened File:' + _File)
+    	 
     
     		
  ### guass fitting ###
