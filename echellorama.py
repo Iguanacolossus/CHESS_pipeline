@@ -375,10 +375,13 @@ class MyWindow(Gtk.Window):
  	
     ### count rate button  
     def on_button1_clicked(self, widget,data):
-    	self.statusbar.push(data,'Use zoom feature in navigation bar to select count rate region')
-    	
+        if self.button1.get_active():
+    	   self.statusbar.push(data,'Use zoom feature in navigation bar to select count rate region')
+    	else: 
+    	   self.statusbar.push(0,'Opened File:' + _File)
     	
     	def onclick2(event):
+    	       if self.button1.get_active():
     	          self.dragbox = []
                   #print event.xdata, event.ydata
                   self.dragbox.append(event.xdata)
@@ -387,7 +390,7 @@ class MyWindow(Gtk.Window):
                   
         def offclick2(event):
                  # print event.xdata, event.ydata
-                  
+               if self.button1.get_active():
                   self.dragbox.append(event.xdata)
                   self.dragbox.append(event.ydata)
                   dragbox = self.dragbox
