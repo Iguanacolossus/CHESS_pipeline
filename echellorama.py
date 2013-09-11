@@ -97,16 +97,14 @@ class MyWindow(Gtk.Window):
         
     # button box
         vbutton_box = Gtk.Box(orientation = Gtk.Orientation.HORIZONTAL)
-        self.button1 = Gtk.Button('Raw count rate')
-        self.button1.connect("clicked", self.on_button1_clicked, context_id)
+        self.button1 = Gtk.ToggleButton(label='Raw count rate')
+        self.button1.connect("toggled", self.on_button1_clicked, context_id)
         self.button2 = Gtk.Button('Filter PHD')
         self.button2.connect("clicked",self.on_button2_clicked,context_id)
         self.button3 = Gtk.ToggleButton(label='Fit 1D Gauss')
         self.button3.set_active(False)
-        #self.button3.connect("toggled", self.toggled, "1")
         self.button3.connect("toggled", self.on_button3_clicked,  context_id)
         self.orderbutton = Gtk.ToggleButton(label='Remove Orders')
-        #self.orderbutton = Gtk.Button(label = 'Remove Order')
         self.orderbutton.connect("toggled",self.orderbutton_clicked,context_id)
         
         
