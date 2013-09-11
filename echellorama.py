@@ -381,6 +381,7 @@ class MyWindow(Gtk.Window):
     	
     	
     	def onclick2(event):
+    	          self.dragbox = []
                   #print event.xdata, event.ydata
                   self.dragbox.append(event.xdata)
                   self.dragbox.append(event.ydata)
