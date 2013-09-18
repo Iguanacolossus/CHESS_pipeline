@@ -106,12 +106,15 @@ class MyWindow(Gtk.Window):
         self.button3.connect("toggled", self.on_button3_clicked,  context_id)
         self.orderbutton = Gtk.ToggleButton(label='Remove Orders')
         self.orderbutton.connect("toggled",self.orderbutton_clicked,context_id)
+        self.buttonbg = Gtk.Button('Airglow')
+        self.buttonbg.connect('clicked', self.buttonbg_clicked, context_id)
         
         
         vbutton_box.pack_start(self.button1,True,True, 0)
         vbutton_box.pack_start(self.button2,True, True, 0)
         vbutton_box.pack_start(self.button3,True, True, 0)
         vbutton_box.pack_start(self.orderbutton,True,True,0)
+        vbutton_box.pack_start(self.buttonbg,True,True,0)
         
      
         
@@ -294,6 +297,22 @@ class MyWindow(Gtk.Window):
         self.plt=self.c.hist(PHD,bins=80,histtype='stepfilled')
         self.canvas.draw()
         
+        
+ ## airglow button ##
+    def buttonbg_clicked(self, widget, data):
+    	dialog = Gtk.FileChooserDialog("Please Choose Airglow File", self,
+            Gtk.FileChooserAction.OPEN,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+        dialog.set_default_response(Gtk.ResponseType.OK)
+        filter = Gtk.FileFilter()
+        filter.set_name('fits Files')
+        filter.add_mime_type('fits')
+        filter.add_pattern('*.fits')
+        dialog.add_filter(filter)
+   
+        response = dialog.run()
+        
   ## gauss fitting button 
     
     def on_button3_clicked(self, widget, data):
@@ -470,7 +489,7 @@ class MyWindow(Gtk.Window):
         self.phd_window.destroy()
         self.filter_phd(phdfilt)
 #    	
-    ### phd filter function 33
+    ### phd filter function ##
     def filter_phd(self, phdfilt):
         phdfilt = [int(x) for x in phdfilt]
         
