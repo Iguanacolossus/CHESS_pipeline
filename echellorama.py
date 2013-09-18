@@ -161,7 +161,9 @@ class MyWindow(Gtk.Window):
         #this picks out the actual data from fits file, and turns it into numpy array
     	self.scidata = hdulist['sci',2].data 
     	hdulist.close()
+    	
     	scidata = self.scidata
+    	
     	targname = self.targname
     	self.science(scidata,targname)
     	
@@ -278,22 +280,34 @@ class MyWindow(Gtk.Window):
     		
         
     def update_plot(self, scidata):
+        
+        #self.a.cla()
+        #self.f.clf()
+        #
         self.plt= self.a.imshow(scidata, vmin = 0, vmax = 255,origin = 'lower')
+        
+        #self.plt.autoscale()
+        global cbar
         cbar=self.f.colorbar(self.plt,shrink=.84,pad=0.01) 
         self.canvas.draw()
 
     def update_ordersplot(self,ychunk,xchunk,lines):
+        ## if you dont want to new airglow subtracted data to over plot but to replot, uncomment this next line
+        #self.e.cla()
         self.e.set_title("orders")
         self.plt=self.e.plot(ychunk,xchunk)
         self.e.hlines(lines,0,2000,color='purple',label='centers')
         self.canvas.draw()
 
     def update_1dplot(self,odo,x):
-        
+        ## if you dont want to new airglow subtracted data to over plot but to replot, uncomment this next line
+        #self.b.cla()
     	self.plt=self.b.plot(x,self.odo)
     	self.canvas.draw()
     	
     def update_PHDplot(self,PHD):
+        ## if you dont want to new airglow subtracted data to over plot but to replot, uncomment this next line
+        #self.c.cla()
         self.plt=self.c.hist(PHD,bins=80,histtype='stepfilled')
         self.canvas.draw()
         
@@ -312,6 +326,36 @@ class MyWindow(Gtk.Window):
         dialog.add_filter(filter)
    
         response = dialog.run()
+        
+        if response == Gtk.ResponseType.OK :
+        	fname = dialog.get_filename()
+        	global _AirglowFile
+        	_AirglowFile = fname
+        	#print "open file" + fname
+        	#self.statusbar.push(0,'Opened File:' + fname)
+        	dialog.destroy()
+        	self.open_Airglowfile(_AirglowFile)
+        elif response == Gtk.ResponseType.CANCEL:
+        	dialog.destroy()
+        	
+# opening a‏iglow fits file
+    def open_Airglowfile(self,_AirglowFile):
+    	#this opens up the fits file
+    	hdulist = fits.open(_AirglowFile)
+      
+      ## this line will need to be used for real data
+        #self.targname = hdulist[0].header['targname']    
+        #targname = self.targname
+        
+      ## but for now
+        targname = 'HD128627J'
+        
+      #  this picks out the actual data from fits file, and turns it into numpy array
+    	self.glowdata = hdulist[0].data 
+    	hdulist.close()
+    	scidata = self.scidata - self.glowdata
+        cbar = NONE
+    	self.science(scidata,targname)
         
   ## gauss fitting button 
     
