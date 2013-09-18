@@ -159,7 +159,8 @@ class MyWindow(Gtk.Window):
         self.targname = hdulist[0].header['targname']    
     
         #this picks out the actual data from fits file, and turns it into numpy array
-    	self.scidata = hdulist['sci',2].data 
+    	#self.scidata = hdulist['sci',2].data 
+    	self.scidata = hdulist['sci',1].data 
     	hdulist.close()
     	
     	scidata = self.scidata
@@ -169,7 +170,8 @@ class MyWindow(Gtk.Window):
     	
     
     def science(self,scidata,targname):
-    	# sends 2d data to my gui plotting funtion	
+    	# sends 2d data to my gui plotting funtion
+	
     	self.update_plot(scidata)
         #self.scidata = scidata
         
@@ -282,18 +284,17 @@ class MyWindow(Gtk.Window):
     def update_plot(self, scidata):
         
         #self.a.cla()
-        #self.f.clf()
-        #
+        #cbar.self.a.cla()
+        
         self.plt= self.a.imshow(scidata, vmin = 0, vmax = 255,origin = 'lower')
         
-        #self.plt.autoscale()
-        global cbar
         cbar=self.f.colorbar(self.plt,shrink=.84,pad=0.01) 
+ 
         self.canvas.draw()
 
     def update_ordersplot(self,ychunk,xchunk,lines):
         ## if you dont want to new airglow subtracted data to over plot but to replot, uncomment this next line
-        #self.e.cla()
+        self.e.cla()
         self.e.set_title("orders")
         self.plt=self.e.plot(ychunk,xchunk)
         self.e.hlines(lines,0,2000,color='purple',label='centers')
@@ -301,13 +302,14 @@ class MyWindow(Gtk.Window):
 
     def update_1dplot(self,odo,x):
         ## if you dont want to new airglow subtracted data to over plot but to replot, uncomment this next line
-        #self.b.cla()
+        self.b.cla()
     	self.plt=self.b.plot(x,self.odo)
     	self.canvas.draw()
     	
     def update_PHDplot(self,PHD):
         ## if you dont want to new airglow subtracted data to over plot but to replot, uncomment this next line
-        #self.c.cla()
+        self.c.cla()
+        self.c.set_title('PHD')
         self.plt=self.c.hist(PHD,bins=80,histtype='stepfilled')
         self.canvas.draw()
         
@@ -354,7 +356,6 @@ class MyWindow(Gtk.Window):
     	self.glowdata = hdulist[0].data 
     	hdulist.close()
     	scidata = self.scidata - self.glowdata
-        cbar = NONE
     	self.science(scidata,targname)
         
   ## gauss fitting button 
