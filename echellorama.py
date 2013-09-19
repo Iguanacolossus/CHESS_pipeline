@@ -270,12 +270,12 @@ class MyWindow(Gtk.Window):
         		t = np.sum(twoD[:,j])
         		Y.append(t)
             # placing 1d orders in dictionary called oneDorders
-        	oneDorders['order'+str(i)]=Y
+        	oneDorders[str(i)]=Y
         
         	
      # sending plotting info to update_1dplot for gui (for now using just on order until cross coralation is added to script
     	self.x = np.linspace(0,len(scidata[0]), num = len(scidata[0]))
-        self.odo=oneDorders['order16']
+        self.odo=oneDorders['16']
         odo = self.odo[:]
     	self.update_1dplot(odo,x)
     	self.save_pickle(oneDorders)
@@ -355,6 +355,7 @@ class MyWindow(Gtk.Window):
       #  this picks out the actual data from fits file, and turns it into numpy array
     	self.glowdata = hdulist[0].data 
     	hdulist.close()
+      # simple subtraction of aurglow image from science image
     	scidata = self.scidata - self.glowdata
     	self.science(scidata,targname)
         
@@ -481,15 +482,15 @@ class MyWindow(Gtk.Window):
     	cntrate = str(cntrate)
     	self.statusbar.push(data,'count rate in box = '+cntrate+' cnt/sec,    pixels in box = '+totpix+'')
     	return cntrate
-    #### phd filter button ##
+  
+  #### phd filter button ##
     
     def on_button2_clicked(self,widget,data):
     	self.phd_window = Gtk.MessageDialog(image = None)
     	self.phd_window.set_size_request(500,100)
     	self.phd_window.move(400, 300)
     	#self.phd_window.connect("delet_event",lambda w,e:)    
-        
-        #mainbox = Gtk.Box( orientation = Gtk.Orientation.VERTICAL) 
+       
         mainbox = self.phd_window.get_content_area()
         self.phd_window.add(mainbox)
         thebox = Gtk.HBox(False, 0)
@@ -589,17 +590,33 @@ class MyWindow(Gtk.Window):
     	self.e.cla()
     	lines = newlines
     	self.update_ordersplot(ychunk,xchunk,lines)
+    	
+    	#for key in oneDorders.keys(): print key
+    	print 'number or original orders',len(oneDorders)
         self.new_dictionary(bad_orders_index)
+        
 
     def new_dictionary(self,bad_orders_index):
-                print 'number or origonal orders',len(oneDorders)
+                
+        maxint = len(oneDorders)	
+        for i in range(0,len(bad_orders_index)):
+        	num = int(bad_orders_index[i][0])
+	
+        	if oneDorders.get(str(num),None):
+        		oneDorders.pop(str(num))
+        	for key in oneDorders.keys():
+        	        k = int(key)
+        		if k > num:
+        		        oneDorders[str(k-1)] = oneDorders.get(key)
+        		if k == maxint-1:
+        		        
+        			oneDorders.pop(key)
+#        		
         	
-        	for i in range(0,len(bad_orders_index)):
-        		num = int(bad_orders_index[i][0])
-        		if oneDorders.get('order'+str(num),None):
-        			oneDorders.pop('order'+str(num))
-        	print 'corrected number of orders',len(oneDorders)
-        	self.save_pickle(oneDorders)
+        print 'corrected number of orders',len(oneDorders)
+        	
+        self.save_pickle(oneDorders)
+        #for key in oneDorders.keys(): print key
     def save_pickle(self, ondDorders):
     	order_dict = oneDorders
         now = datetime.datetime.now()
